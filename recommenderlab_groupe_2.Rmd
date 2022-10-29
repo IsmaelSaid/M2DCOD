@@ -63,7 +63,7 @@ dimnames(anime_ratings_real_ratings_matrix)
 
 ```
 
-## Visalisation des notes sur un real ratings matrix
+## Visualisation des notes sur un real ratings matrix
 
 On peut utiliser un real_ratings_matrix pour visualiser les selections.
 
@@ -98,7 +98,7 @@ hist(getRatings(normalize(
 
 La binarisation permet de réduire la note à un avis posivite (1) ou un avis négative (0).
 
-La facon la plus simple de binariser est d'utiliser as. \
+La facon la plus simple de binariser est d'utiliser as.\
 
 ```{r}
 brmx_anime_ratings <- as(anime_ratings,'binaryRatingMatrix')
@@ -110,4 +110,11 @@ On peut aussi visualiser les binary ratings matrix avec la méthode image.
 
 ```{r}
 image(brmx_anime_ratings[1:10,1:30])
+```
+
+# Création de modèle de recommandation
+
+```{r}
+recommender <- Recommender(anime_ratings_real_ratings_matrix, method = "popular")
+recommender$
 ```
