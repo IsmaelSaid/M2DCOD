@@ -19,23 +19,47 @@ anime_ratings <-read.csv("datasets/anime/anime_ratings.dat",header = TRUE, sep =
 ```
 
 # Coercition
+La coercition consiste à convertir un objet en une classe donnée
 Par défaut, read.csv retourne un data.frame. Il est necessaire de le transformer
 vers un format adapté pour pouvoir y faire des opérations supplémentaires.
 
 ## Dataframe 
 
 ```{r}
+#on affiche les colonnes(1 à 5) et lignes (1 à 3) de la matrice
 anime_ratings[1:5,1:3]
 ```
-## data.frame vers matrix
+## coercition du data.frame vers un objet Matrix
 ```{r}
-# as(anime_ratings,'matrix')
+matrix_rating <- as(anime_ratings,'Matrix')
+class(x = matrix_rating) #on vérifie la classe de l'objet apres la coercition
 ```
+
+## méthodes utilisables par ratingMatrix et ses sous-classes 
+##binaryRatingMatrix ainsi que realRatingMatrix
+L'interface ratingMatrix implémente de nombreuses méthodes 
+disponibles pour les objets de type Matrix
+```{r}
+#voir les dimension de la matrice
+print("Dimension de la matrice:")
+dim(matrix_rating)
+print("Somme des colonnes:")
+colSums(matrix_rating)
+print("Moyenne des colonnes:")
+colMeans(matrix_rating)
+```
+
 ## data.frame vers realratingsMatrix
 Il est plus facile de selectionner les utilisateurs et les items que l'on souhaite 
-manipuler et comparer avec les real_rattings_matrix.
+manipuler et les comparer avec les real_rattings_matrix.
 ```{r}
 anime_ratings_real_ratings_matrix <- as(anime_ratings,'realRatingMatrix')
+dimnames(anime_ratings_real_ratings_matrix)
+```
+
+
+```{r}
+#getRatingMatrix(anime_ratings_real_ratings_matrix)
 ```
 
 ## Visualisation
