@@ -25,7 +25,7 @@ vers un format adapté pour pouvoir y faire des opérations supplémentaires.
 
 ## Dataframe 
 
-```{r}
+```{r echo=TRUE}
 #on affiche les colonnes(1 à 5) et lignes (1 à 3) de la matrice
 anime_ratings[1:5,1:3]
 ```
@@ -56,23 +56,30 @@ Il est plus facile de selectionner les utilisateurs et les items que l'on souhai
 manipuler et les comparer avec les real_rattings_matrix.
 ```{r}
 anime_ratings_real_ratings_matrix <- as(anime_ratings,'realRatingMatrix')
-dimnames(anime_ratings_real_ratings_matrix)
-```
+dimnames(anime_ratings_real_ratings_matrix)[1]
 
-
-```{r}
-#getRatingMatrix(anime_ratings_real_ratings_matrix)
 ```
 
 ## Visualisation
 On peut utiliser un real_ratings_matrix pour visualiser les selections.
-```{r}
+```{r, fig.width = 4}
 image(anime_ratings_real_ratings_matrix[1:10,1:30])
 ```
 
 ## Visualisation
 On peut utiliser un real_ratings_matrix pour visualiser les selections.
-```{r}
+```{r, fig.width = 10}
 hist(getRatings(anime_ratings_real_ratings_matrix),breaks = 10,labels = TRUE)
-
 ```
+# Normalisation 
+nrrmx: normalised real ratings matrix
+```{r}
+nrrmx_anime_ratings =  normalize(anime_ratings_real_ratings_matrix)
+```
+
+## Visualisation nrrmx_anime_ratings
+```{r, fig.width = 10}
+hist(getRatings(normalize(
+  anime_ratings_real_ratings_matrix)),breaks=100)
+```
+
