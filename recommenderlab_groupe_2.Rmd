@@ -46,7 +46,7 @@ BinaryRatingMatrix ainsi que realRatingMatrix L'interface ratingMatrix implémen
 print("Dimension de la matrice:")
 dim(matrix_rating)
 # On peut pas vraiment faire la somme de ses colonnes. 
-print("Somme des colonnes:")
+print("Somme des éléments de chaques colonnes:")
 colSums(matrix_rating)
 print("Moyenne des Feedbacks:")
 # On peut récupérer uniquement la moyenne du feebdack.
@@ -59,7 +59,15 @@ Il est plus facile de selectionner les utilisateurs et les items que l'on souhai
 
 ```{r}
 anime_ratings_real_ratings_matrix <- as(anime_ratings,'realRatingMatrix')
-dimnames(anime_ratings_real_ratings_matrix)
+#dimnames(anime_ratings_real_ratings_matrix)
+getRatings(anime_ratings_real_ratings_matrix)
+
+#nombre de rating
+nratings(anime_ratings_real_ratings_matrix) 
+#nombre de rating par utilisateur
+#rowCounts(anime_ratings_real_ratings_matrix)
+#nombre de rating par item
+#colCounts(anime_ratings_real_ratings_matrix)
 
 ```
 
@@ -82,11 +90,19 @@ hist(getRatings(anime_ratings_real_ratings_matrix),breaks = 10,labels = TRUE)
 ```
 
 # Normalisation
-
-On peut normaliser les notes avec la fonction normalise.
+La normalisation tente de réduire le biais de notation individuel en centrant les données par ligne.
+On a le choix d'utiliser une normalisation par centrage (défaut) ou par zscore.
+Par centre: On soustrait chaque note disponible de la moyenne des notes de cet utilisateur (ligne)
+On peut normaliser les notes avec la fonction normalize.
+La fonction prend en argument un objet RealRatingMatrix
 
 ```{r}
+#normalisation par centre
 nrrmx_anime_ratings =  normalize(anime_ratings_real_ratings_matrix)
+getRatings(nrrmx_anime_ratings) 
+#normalisation par z-score
+nzrrmx_anime_ratings <- normalize(anime_ratings_real_ratings_matrix, method="Z-score")
+getRatings(nzrrmx_anime_ratings) 
 ```
 
 ## Histogramme des notes normalisées
