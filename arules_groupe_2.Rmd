@@ -2,7 +2,7 @@
 title: "arules_groupe_2"
 author: 'Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et Miary RAMAMONJISOA '
 output: html_document
-date: "2022-10-28"
+date: "2022-10-05"
 ---
 
 ```{r setup, include=FALSE}
