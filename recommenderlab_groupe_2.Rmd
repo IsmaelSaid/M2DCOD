@@ -1,8 +1,15 @@
 ---
-title: "recommenderlab_groupe_2"
-output: html_document
+title: "Guide d'utilisation recommenderlab"
+output:
+  pdf_document: default
+  html_document: default
 date: "2022-10-28"
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("recommenderlab")
+```
 
 # Chargment des fichiers 
 ```{r}
@@ -11,3 +18,28 @@ anime_info <-read.csv("datasets/anime/anime_info.dat",header = TRUE, sep = "\t")
 anime_ratings <-read.csv("datasets/anime/anime_ratings.dat",header = TRUE, sep = "\t")
 ```
 
+# Coercition
+Par défaut, read.csv retourne un data.frame. Il est necessaire de le transformer
+vers un format adapté pour pouvoir y faire des opérations supplémentaires.
+
+## Dataframe 
+
+```{r}
+anime_ratings[1:5,1:3]
+```
+## data.frame vers matrix
+```{r}
+# as(anime_ratings,'matrix')
+```
+## data.frame vers realratingsMatrix
+Il est plus facile de selectionner les utilisateurs et les items que l'on souhaite 
+manipuler et comparer avec les real_rattings_matrix.
+```{r}
+anime_ratings_real_ratings_matrix <- as(anime_ratings,'realRatingMatrix')
+```
+
+## Visualisation
+On peut utiliser un real_ratings_matrix pour visualiser les selections.
+```{r}
+image(anime_ratings_real_ratings_matrix[1:10,1:30])
+```
