@@ -3,7 +3,7 @@
 .RData
 .Ruserdata
 *.pdf
-.html
-.log
-.tex
+*.html
+*.log
+*.tex
 arules_groupe_2.html
