@@ -77,6 +77,8 @@ On peut utiliser un real_ratings_matrix pour visualiser les selections.
 
 ```{r, fig.width = 10}
 hist(getRatings(anime_ratings_real_ratings_matrix),breaks = 10,labels = TRUE)
+# Quelque questions intéressantes : 
+# Que dire de la moyenne ? 
 ```
 
 # Normalisation
@@ -112,9 +114,26 @@ On peut aussi visualiser les binary ratings matrix avec la méthode image.
 image(brmx_anime_ratings[1:10,1:30])
 ```
 
-# Création de modèle de recommandation
+# Modèle de recommandation
+
+## Création d'un training set
+
+```{r}
+nb_lignes <- dim(brmx_anime_ratings)[1]
+
+validation_set <- brmx_anime_ratings[1,]
+trainining_set <- brmx_anime_ratings[2:nb_lignes,]
+
+```
+
+## Création d'un modèle
 
 ```{r}
 recommender <- Recommender(anime_ratings_real_ratings_matrix, method = "popular")
-recommender$
+```
+
+## Faire des prédictions
+
+```{r}
+
 ```
