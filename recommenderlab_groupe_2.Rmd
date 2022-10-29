@@ -106,10 +106,10 @@ La normalisation tente de réduire le biais de notation individuel en centrant l
 ```{r}
 #normalisation par centre
 nrrmx_anime_ratings =  normalize(rrm_anime)
-getRatings(nrrmx_anime_ratings) 
+head(getRatings(nrrmx_anime_ratings))
 #normalisation par z-score
 nzrrmx_anime_ratings <- normalize(rrm_anime, method="Z-score")
-getRatings(nzrrmx_anime_ratings) 
+head(getRatings(nzrrmx_anime_ratings))
 ```
 
 ## Histogramme des notes normalisées
@@ -130,6 +130,7 @@ La facon la plus simple de binariser est d'utiliser as.\
 anime_binary <- binarize(rrm_anime, minRating=4)
 class(anime_binary)
 getRatings(anime_binary)   
+
                          
 ```
 
