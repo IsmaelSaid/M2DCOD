@@ -43,10 +43,12 @@ disponibles pour les objets de type Matrix
 #voir les dimension de la matrice
 print("Dimension de la matrice:")
 dim(matrix_rating)
+# On peut pas vraiment faire la somme de ses colonnes. 
 print("Somme des colonnes:")
 colSums(matrix_rating)
-print("Moyenne des colonnes:")
-colMeans(matrix_rating)
+print("Moyenne des Feedbacks:")
+# On peut récupérer uniquement la moyenne du feebdack.
+colMeans(matrix_rating)['Feedback']
 ```
 
 ## data.frame vers realratingsMatrix
@@ -66,4 +68,11 @@ dimnames(anime_ratings_real_ratings_matrix)
 On peut utiliser un real_ratings_matrix pour visualiser les selections.
 ```{r}
 image(anime_ratings_real_ratings_matrix[1:10,1:30])
+```
+
+## Visualisation
+On peut utiliser un real_ratings_matrix pour visualiser les selections.
+```{r}
+hist(getRatings(anime_ratings_real_ratings_matrix),breaks = 10,labels = TRUE)
+
 ```
