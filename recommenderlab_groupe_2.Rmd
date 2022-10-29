@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library("recommenderlab")
 ```
 
-# Chargment des fichiers 
+# Chargment des fichiers
+
 ```{r}
 anime_history <-read.csv("datasets/anime/anime_history.dat",header = TRUE, sep = "\t")
 anime_info <-read.csv("datasets/anime/anime_info.dat",header = TRUE, sep = "\t")
@@ -19,26 +20,27 @@ anime_ratings <-read.csv("datasets/anime/anime_ratings.dat",header = TRUE, sep =
 ```
 
 # Coercition
-La coercition consiste à convertir un objet en une classe donnée
-Par défaut, read.csv retourne un data.frame. Il est necessaire de le transformer
-vers un format adapté pour pouvoir y faire des opérations supplémentaires.
 
-## Dataframe 
+La coercition consiste à convertir un objet en une classe donnée. Par défaut, read.csv retourne un data.frame. Il est necessaire de le transformer vers un format adapté pour pouvoir y faire des opérations supplémentaires.
+
+## Dataframe
 
 ```{r echo=TRUE}
 #on affiche les colonnes(1 à 5) et lignes (1 à 3) de la matrice
 anime_ratings[1:5,1:3]
 ```
-## coercition du data.frame vers un objet Matrix
+
+## Coercition du data.frame vers un objet Matrix
+
 ```{r}
 matrix_rating <- as(anime_ratings,'Matrix')
 class(x = matrix_rating) #on vérifie la classe de l'objet apres la coercition
 ```
 
-## méthodes utilisables par ratingMatrix et ses sous-classes 
-##binaryRatingMatrix ainsi que realRatingMatrix
-L'interface ratingMatrix implémente de nombreuses méthodes 
-disponibles pour les objets de type Matrix
+## Méthodes utilisables par ratingMatrix et ses sous-classes
+
+BinaryRatingMatrix ainsi que realRatingMatrix L'interface ratingMatrix implémente de nombreuses méthodes disponibles pour les objets de type Matrix
+
 ```{r}
 #voir les dimension de la matrice
 print("Dimension de la matrice:")
@@ -51,35 +53,61 @@ print("Moyenne des Feedbacks:")
 colMeans(matrix_rating)['Feedback']
 ```
 
-## data.frame vers realratingsMatrix
-Il est plus facile de selectionner les utilisateurs et les items que l'on souhaite 
-manipuler et les comparer avec les real_rattings_matrix.
+## Data.frame vers realratingsMatrix
+
+Il est plus facile de selectionner les utilisateurs et les items que l'on souhaite manipuler et les comparer avec les real_rattings_matrix.
+
 ```{r}
 anime_ratings_real_ratings_matrix <- as(anime_ratings,'realRatingMatrix')
-dimnames(anime_ratings_real_ratings_matrix)[1]
+dimnames(anime_ratings_real_ratings_matrix)
 
 ```
 
-## Visualisation
+## Visalisation des notes sur un real ratings matrix
+
 On peut utiliser un real_ratings_matrix pour visualiser les selections.
-```{r, fig.width = 4}
+
+```{r, fig.width = 10}
 image(anime_ratings_real_ratings_matrix[1:10,1:30])
 ```
 
-## Visualisation
+## Histogramme
+
 On peut utiliser un real_ratings_matrix pour visualiser les selections.
+
 ```{r, fig.width = 10}
 hist(getRatings(anime_ratings_real_ratings_matrix),breaks = 10,labels = TRUE)
 ```
-# Normalisation 
-nrrmx: normalised real ratings matrix
+
+# Normalisation
+
+On peut normaliser les notes avec la fonction normalise.
+
 ```{r}
 nrrmx_anime_ratings =  normalize(anime_ratings_real_ratings_matrix)
 ```
 
-## Visualisation nrrmx_anime_ratings
+## Histogramme des notes normalisées
+
 ```{r, fig.width = 10}
 hist(getRatings(normalize(
   anime_ratings_real_ratings_matrix)),breaks=100)
 ```
 
+# Binarisation des données
+
+La binarisation permet de réduire la note à un avis posivite (1) ou un avis négative (0).
+
+La facon la plus simple de binariser est d'utiliser as. \
+
+```{r}
+brmx_anime_ratings <- as(anime_ratings,'binaryRatingMatrix')
+```
+
+# Visualisation binary ratings matrix
+
+On peut aussi visualiser les binary ratings matrix avec la méthode image.
+
+```{r}
+image(brmx_anime_ratings[1:10,1:30])
+```
