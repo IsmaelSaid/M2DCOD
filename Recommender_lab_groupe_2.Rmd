@@ -148,4 +148,57 @@ On peut aussi visualiser les binary ratings matrix avec la méthode image.
   image(anime_binary[1:10,1:30])
   as(anime_binary[1:10,1:30], "matrix")
 ```
-# Partie 2 
+# Evaluation des modèles de recommendations
+
+## Mise en situation 
+
+## Etape 1 : identifier le problème
+Qu'est ce que je pourrais bien lui recommander ?
+```{r,echo=TRUE}
+image(rrm_anime[1:1,1:25])
+```
+
+
+## Etape 2 : Comprendre les données
+-   $X \in \mathbb{R}^{4714}$ Ensemble des utilisateurs
+-   $S \in \mathbb{R}^{7157}$ Ensemble des Animés
+-   constat : notes biaisées
+
+### Comprendre les données
+```{r,echo=FALSE}
+nb_lignes=dim(rrm_anime)[1]
+nb_items=dim(rrm_anime)[2]
+boxplot(data.frame(global = colMeans(rrm_anime[1:nb_lignes,1:nb_items])))
+```
+
+## Etape 3 : Préparer ses données
+```{r,echo=FALSE,results='hide'}
+e <- evaluationScheme(
+  train = 0.9,
+  normalize(rrm_anime),
+  method="split",
+  given=1,
+  goodRating=0)
+```
+### Séparer ses données
+```R
+evaluationScheme(data, method, train, k...)
+```
+
+### Normaliser ses données
+```R
+normalise(data, method, train, k...)
+
+```
+### Vérifiez les répartitions des notes 
+```{r,echo=FALSE,fig.}
+custom_summary = data.frame(
+  training = colMeans(getData(e,"train")),
+  known = colMeans(getData(e,"know"))
+)
+boxplot(custom_summary)
+```
+
+## Etape 4 : Créer des modèles de recommendations
+
+## Etape 5 : Evaluer des modèles de recommendations
