@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = FALSE)
 library("recommenderlab")
 ```
 
+# Partie 1.
 ## Chargement des fichiers
 Nous travaillons avec les données anime. Ces données représentent les notes attribuées aux animés par 5000 utilisateurs.
 Les données sont au format dat.
@@ -38,7 +39,8 @@ Pour accèder aux elements d'un dataframe, nous utilisons les brackets [lignes,c
 ```{r echo=TRUE,  results='hide'}
 anime_ratings[1:5,1:3] #lignes 1 à 5, colonnes 1 à 3
 anime_ratings[1:5, c("User_ID","Anime_ID","Feedback")]
-anime_ratings[-c(1, 2)]  #uniquement la colonne 3
+# Cette ligne ralentit considéralement l'exportation en pdf. 
+# anime_ratings[-c(1, 2)]  #uniquement la colonne 3
 summary(anime_ratings) #statistique de base
 ```
 
@@ -146,3 +148,4 @@ On peut aussi visualiser les binary ratings matrix avec la méthode image.
   image(anime_binary[1:10,1:30])
   as(anime_binary[1:10,1:30], "matrix")
 ```
+# Partie 2 
