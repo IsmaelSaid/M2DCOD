@@ -1,35 +1,61 @@
 ---
-title: "arules_groupe_2"
-author: 'Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et Miary RAMAMONJISOA '
-output: html_document
-date: "2022-10-05"
+title: "Guide d'utilisation : Librairie arules"
+author: "Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et Miary RAMAMONJISOA "
+date: "2022-11-01"
+output: 
+  beamer_presentation: 
+    incremental: yes
+    fig_width: 5
+    fig_height: 3
+    keep_tex: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-## Sénarios 1: Examen des variables
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 1: Examen des variables
 
 Installation des package à utiliser.
 ```{r arules et dataset}
+library("stringr")
+library("plyr")
 library("arules")
 library("arulesViz")
+library("plotly")
 ```
 
 Charger les 2 datasets
 ```{r chagrer dataset film}
+
 library(readr)
-film <- read_csv("film.csv")
-film
+film <- read_csv("movies_metadata.csv")
+
+#afficher les 20 premiers lignes de données
+film[1:5,]
 ```
 
 ```{r charger dataset notation film}
-library(readr)
-notation_film <- read_csv("notation.csv")
-notation_film
+#library(readr)
+notation_film <- read_csv("ratings_small.csv")
+
+#afficher les 20 premiers lignes de données
+notation_film[1:5,]
+
+colnames(notation_film)<-c("userId", "filmId", "note","timestamp")
+```
+#charger les transactions en CSV
+```{r éxporter dataset en CSV}
+write.csv(notation_film,"ItemList.csv", quote = FALSE, row.names = TRUE)
 ```
 
-## Transaction via les datasets
+#Lecture de la transacion à partir du csv
+```{r transaction}
+transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1)
+```
 
-```{r trans}
-trans = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1);
+#Test de sortie algo APRIORI via la transaction pour sortir les règles: OK
+```{r regles}
+regles <- apriori(transaction,parameter = list(sup = 0.017, conf = 0.01,target="rules"));
+inspect(regles)
+```
