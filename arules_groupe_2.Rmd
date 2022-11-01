@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 1: Examen des variables
 
 Installation des package à utiliser.
-```{r arules et dataset, eval=FALSE}
+```{r arules et dataset}
 library("stringr")
 library("plyr")
 library("arules")
@@ -26,7 +26,7 @@ library("plotly")
 ```
 
 Charger les 2 datasets
-```{r chagrer dataset film, eval=FALSE}
+```{r chagrer dataset film}
 
 library(readr)
 film <- read_csv("movies_metadata.csv")
@@ -35,7 +35,7 @@ film <- read_csv("movies_metadata.csv")
 film[1:5,]
 ```
 
-```{r charger dataset notation film,eval=FALSE}
+```{r charger dataset notation film}
 #library(readr)
 notation_film <- read_csv("ratings_small.csv")
 
@@ -44,12 +44,18 @@ notation_film[1:5,]
 
 colnames(notation_film)<-c("userId", "filmId", "note","timestamp")
 ```
-
 #charger les transactions en CSV
-write.csv(notation_itemList,"ItemList.csv", quote = FALSE, row.names = TRUE)
+```{r éxporter dataset en CSV}
+write.csv(notation_film,"ItemList.csv", quote = FALSE, row.names = TRUE)
+```
 
 #Lecture de la transacion à partir du csv
+```{r transaction}
 transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1)
 ```
 
-## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 4: Choix du seuil minimum du support (heuristiques)
+#Test de sortie algo APRIORI via la transaction pour sortir les règles: OK
+```{r regles}
+regles <- apriori(transaction,parameter = list(sup = 0.017, conf = 0.01,target="rules"));
+inspect(regles)
+```
