@@ -1,35 +1,55 @@
 ---
-title: "arules_groupe_2"
-author: 'Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et Miary RAMAMONJISOA '
-output: html_document
-date: "2022-10-05"
+title: "Guide d'utilisation : Librairie arules"
+author: "Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et Miary RAMAMONJISOA "
+date: "2022-11-01"
+output: 
+  beamer_presentation: 
+    incremental: yes
+    fig_width: 5
+    fig_height: 3
+    keep_tex: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-## Sénarios 1: Examen des variables
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 1: Examen des variables
 
 Installation des package à utiliser.
-```{r arules et dataset}
+```{r arules et dataset, eval=FALSE}
+library("stringr")
+library("plyr")
 library("arules")
 library("arulesViz")
+library("plotly")
 ```
 
 Charger les 2 datasets
-```{r chagrer dataset film}
+```{r chagrer dataset film, eval=FALSE}
+
 library(readr)
-film <- read_csv("film.csv")
-film
+film <- read_csv("movies_metadata.csv")
+
+#afficher les 20 premiers lignes de données
+film[1:5,]
 ```
 
-```{r charger dataset notation film}
-library(readr)
-notation_film <- read_csv("notation.csv")
-notation_film
+```{r charger dataset notation film,eval=FALSE}
+#library(readr)
+notation_film <- read_csv("ratings_small.csv")
+
+#afficher les 20 premiers lignes de données
+notation_film[1:5,]
+
+colnames(notation_film)<-c("userId", "filmId", "note","timestamp")
 ```
 
-## Transaction via les datasets
+#charger les transactions en CSV
+write.csv(notation_itemList,"ItemList.csv", quote = FALSE, row.names = TRUE)
 
-```{r trans}
-trans = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1);
+#Lecture de la transacion à partir du csv
+transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1)
+```
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 4: Choix du seuil minimum du support (heuristiques)
