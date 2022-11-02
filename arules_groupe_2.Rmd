@@ -1,49 +1,95 @@
 ---
-title: "Guide d'utilisation : Librairie arules"
-author: "Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et Miary RAMAMONJISOA "
-date: "2022-11-01"
-output: 
-  beamer_presentation: 
-    incremental: yes
-    fig_width: 5
-    fig_height: 3
-    keep_tex: yes
+title: 'Guide d'utilisation : Librairie arules'
+author: 'Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et RAMAMONJISOA Miary '
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Introduction
+
+Ce document contient le guide d'utilisation de la librairie "arules" du langage R.
+
+"arules" fournit l'infrastructure pour représenter, manipuler et analyser les données et les modèles de transaction à l'aide d'ensembles d'éléments et de règles d'association. 
+La librairie fournit également un large éventail de qualité de mesures  et d’algorithmes de mining par exemple Apriori ou Eclat.
+
+Dans cette guide d'utilisation, nous allons détailler l'utilisation de la librairie avec le dataset "movies" et "rating".
+Le dataset "movies_metadata" contient les identifiants et les titres des films. Le dataset "rating_small" contient les notes de chaque utilisateurs pour les films qu’ils ont visionnés ( sur une échelle de 1 à 5).
+
+Lien de téléchagrement des datasets ( plateforme KAGGLE): voir 
+<https://storage.googleapis.com/kaggle-data-sets/3405/6663/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20221028%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20221028T142058Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=4b40430abe1202127eb465127e0ade04896bab6dd9255fb4d9bc04c3c0182769b52b678f04142b14d35e23cfbfc84f13e3c84c722bd426132ba5f098ca2c0777b90852a76dfc33408786ee0b5859f73b14d53020bcf43085b45432163e98272e9970b638549c04a59dc0424049bcb64d8183ad6a77cfbba2afc1d90b22232648f4f3a984ef580f1fb765f91f430438cb53b803b495e3671dc380a3abd315814b6d0ad4fd9873312e7ad8b42d957edb9cd5b5dc2f1442df46d32148432d49e69aed14ea52bfe8a2a515980efc7d799e28df952b12b6b78020a17c3b39af17ddceb48135839eb244a9e0bc81d00798d479b34348f49ae1c9e662e72cd1ed479508>
+
+
 ## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 1: Examen des variables
 
-Installation des package à utiliser.
+Installation des librairies utilisées
 ```{r arules et dataset}
+#librairie de gestion des chaines de caractères
 library("stringr")
+#librairie pour fractionner, appliquer et combiner des données
 library("plyr")
+#librairie arules
 library("arules")
+#librairie pour visualiser des règles d'association et des ensembles d'éléments fréquents
 library("arulesViz")
+#librairie pour créer des graphiques Web interactifs avec javascript sous R
 library("plotly")
 ```
 
 Charger les 2 datasets
 ```{r chagrer dataset film}
-
+#librairie qui permet de lire des données rectangulaires (comme 'csv','tsv')
 library(readr)
+#lecture du fichier csv et chargement dans le vecteur film
 film <- read_csv("movies_metadata.csv")
 
 #afficher les 20 premiers lignes de données
-film[1:5,]
+film[1:20,]
 ```
 
 ```{r charger dataset notation film}
-#library(readr)
+library(readr)
+#lecture du fichier csv et chargement dans le vecteur notatin_film
 notation_film <- read_csv("ratings_small.csv")
 
 #afficher les 20 premiers lignes de données
-notation_film[1:5,]
+notation_film[1:20,]
 
 colnames(notation_film)<-c("userId", "filmId", "note","timestamp")
 ```
+
+Description statistique du dataset "film"
+```{r description statistique sur film}
+#fonction qui délivre la moyenne et les quantiles de chaque variable
+summary(film)
+```
+
+Statistique descripive sur le dataset "notation"
+```{r description statistique sur notation}
+#fonction qui délivre la moyenne et les quantiles de chaque variable
+summary(notation_film)
+```
+
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 2: Sélection de variables plus pertinentes
+
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 3: Discrétisation de variables quantitatives (heuristique)
+
+Discrétiser c'est réaliser un découpage en classes des variables quantitative et ensuite nommer les classes.
+
+a) DETERMINER LE NOMBRE DE CLASSE
+
+b) CHOISIR LES BORNES DE LA CLASSE
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 4: Choix du seuil minimum du support (heuristiques)
+
+#Pour la suite des parties: ces données sont utilisables
+
 #charger les transactions en CSV
 ```{r éxporter dataset en CSV}
 write.csv(notation_film,"ItemList.csv", quote = FALSE, row.names = TRUE)
@@ -56,6 +102,6 @@ transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format
 
 #Test de sortie algo APRIORI via la transaction pour sortir les règles: OK
 ```{r regles}
-regles <- apriori(transaction,parameter = list(sup = 0.017, conf = 0.01,target="rules"));
+regles <- apriori(transaction,parameter = list(sup = 0.017, conf = 0,target="rules"));
 inspect(regles)
 ```
