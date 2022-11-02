@@ -354,10 +354,6 @@ plot(results,"prec/rec",annotate=TRUE)
 ## Comparaison de plusieurs algorithmes 
 
 ```{r}
-
-```
-
-```{r}
 scheme <- evaluationScheme(dataset,
                            method="split",
                            train = .9,
