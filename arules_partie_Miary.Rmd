@@ -32,7 +32,7 @@ movies <- subset(movies, select=c("id" ,"title"))
 notation <- read_csv("datasets/movie/notation.csv")
 ```
 
-#on supprime les virgules dans les titres
+# on supprime les virgules dans les titres
 ```{r delete comma}
 movies $title<- str_replace_all(movies$title, ",", " ")
 ```
@@ -45,27 +45,26 @@ colnames(watching)<-c("userId", "movieId", "rating","timestamp")
 watching <- subset(watching, select=c("userId" ,"movieId", "rating"))
 ```
 
-#changement de format
+# changement de format
 ```{r change format}
 watching$movieId<-as.character(watching$movieId)
 watching$userId<-as.character(watching$userId)
 ```
 
-#----- Statistiques descriptives -----
-#Nombre de visionnage par film
+# Nombre de visionnage par film
 ```{r number visionage}
 freq_movie <-count(watching,c("movieId"))
 names(freq_movie)<-c("movieId","Number_view")   
 ```
 
-#Répartition des notes moyennes
+# Répartition des notes moyennes
 ```{r note}
 freq_rate <-as.data.frame(tapply(watching$rating,watching$movieId,mean))
 names(freq_rate)<-c("Notes_moyennes")
 freq_rate$movieId<-rownames(freq_rate)   
 ```
 
-#On en conserve que les films avec des notes supérieures ou égales à 4
+# On en conserve que les films avec des notes supérieures ou égales à 4
 ```{r note > 4}
 watching <- watching[watching$rating>=4,]
 ```
@@ -76,14 +75,14 @@ watching<-merge(x = watching, y = freq_movie, by = "movieId", all.x = TRUE)
 watching<-watching[watching$Number_view>500,]
 ```
 
-#On ajoute le nom des films et on ne conserve que les films qui ont un nom
+# On ajoute le nom des films et on ne conserve que les films qui ont un nom
 ```{r add name}
 names(movies)=c("movieId", "titre")
 watching<-merge(x = watching, y = movies, by = "movieId")
 head(watching)
 ```
 
-#On transforme les données en données "panier"
+# On transforme les données en données "panier"
 ```{r transform data}
 watching_itemList <- ddply(watching,c("userId"),
 function(df1)paste(df1$titre,
@@ -97,7 +96,7 @@ head(watching_itemList)
 ```
 
 
-# Scénarios 6 : Visualisation de sous ensembles de règles
+# Visualisation de sous ensembles de règles
 
 L'exploration de règles d'association est une méthode d'exploration de données disponible dans R. Nous utilisons le package arulesViz qui implémente plusieurs techniques de visualisation connues et nouvelles pour explorer les règles d'association. 
 
@@ -159,7 +158,7 @@ plot(subrules2, method = "graph")
  
 
 
-# Scénarios 7 : Implémentation de nouvelle mesure de qualité
+# Implémentation de nouvelle mesure de qualité
 
 Il existe plusieurs nouvelles mesures de qualité, nous allons voir le coefficient de correlation linéaire. 
 Le coefficient de corrélation linéaire quantifie la force du lien linéaire entre les deux caractères d’une distribution. Pour le déterminer, on peut procéder par estimation de son allure graphique.
@@ -194,7 +193,7 @@ cor.test(notation$userId,notation$movieId,use="complete.obs")
 Nous y voyons que  ce qui est très faible.
 
 
-# Scénarios 8 : Aide à la décision
+# Aide à la décision
 
 Revenons sur les règles précédemment mentionnées.Nous allons afficher les top 10 des règles le plus pertinentes avec sa graphe.
 
