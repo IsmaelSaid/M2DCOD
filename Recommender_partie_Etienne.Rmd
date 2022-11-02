@@ -59,26 +59,30 @@ rrm_anime <- as(anime_ratings,'realRatingMatrix')
 as(rrm_anime[1:3,1:10], "list")
 ```
 
-## 
+---
+
 ```{r, echo=TRUE}
 #reconversion en dataframe
 head(as(rrm_anime,'data.frame'))
 class(as(rrm_anime, "data.frame")) #type dataframe
 ```
 
-## 
+## getRatingMatrix
+retourne les notes dans une sparse Matrix
+ci-dessous, un aperçu de la matrice d'évaluation
+des utilisateurs et de leurs évaluations. Les lignes
+correspondent aux indexes utilisateurs.
 ```{r, echo=TRUE}
-#retourne les notes dans une sparse Matrix
-#ci-dessous, un aperçu de la matrice d'évaluation
-#des utilisateurs et de leurs évaluations. Les lignes
-#correspondent aux indexes utilisateurs.
 getRatingMatrix(rrm_anime[1:5,1:20])
 ```
 
+## getRatings
+
+La fonction getRatings renvoie les notes 
+non manquantes depuis une realRatingMatrix 
+sous forme de vecteur.
+
 ```{r, echo=TRUE}
-#La fonction getRatings renvoie les notes 
-#non manquantes depuis une realRatingMatrix 
-#sous forme de vecteur.
 getRatings(rrm_anime[1:10,1:20])
 ```
 ## 
@@ -96,7 +100,7 @@ La fonction prend en argument un objet RealRatingMatrix
 
 ```{r,echo=TRUE}
 #valeurs avant la normalisation
-as(rrm_anime[1:3,1:10], "list")
+as(rrm_anime[1:3,1:7], "matrix")
 ```
 ## 
 ```{r, echo=TRUE}
@@ -106,10 +110,10 @@ nrrmx_anime_ratings =  normalize(rrm_anime)
 nzrrmx_anime_ratings <- normalize(rrm_anime, 
                                   method="Z-score")
 #affichage sous forme de liste apres normalisation
-as(nrrmx_anime_ratings[1:3,1:10], "list")
+as(nrrmx_anime_ratings[1:3,1:7], "matrix")
 ```
 
-## 
+## Dénormalisation
 ```{r,echo=TRUE}
 #dénormaliser
 denormalize(nrrmx_anime_ratings)
@@ -120,19 +124,21 @@ identical(denormalize(nrrmx_anime_ratings),rrm_anime)
 ```
 
 ## Histogramme
-```{r,echo=TRUE}
-hist(getRatings(rrm_anime),breaks=100)
+
+```{r, echo=TRUE, fig.height=7}
+hist(getRatings(rrm_anime), breaks=10,xlab = "notes", 
+     main="répartitions des notes des animés", 
+     labels = TRUE)
 ```
 
-
 ## Par centrage
-```{r,echo=TRUE}
+```{r,echo=TRUE, fig.height=5}
 hist(getRatings(nrrmx_anime_ratings),
      breaks=100, main="Par centrage")
 ```
 
 ## Par Z-score
-```{r,echo=TRUE}
+```{r,echo=TRUE, fig.height=5}
 hist(getRatings(nzrrmx_anime_ratings),
      breaks=100,main="Par Z-score")
 ```
@@ -146,38 +152,24 @@ nratings(rrm_anime) # 419 943 notes
 summary(getRatings(rrm_anime)) #statistique de base
 ```
 
-
-## Inspection des propriétés
-
-```{r, fig.width = 5,echo=TRUE, fig.height=3.7}
-hist(getRatings(rrm_anime), breaks=10,xlab = "notes", 
-     main="répartitions des notes des animés", 
-     labels = TRUE)
-```
-
-```{r, fig.width = 5,echo=FALSE}
-hist(getRatings(nrrmx_anime_ratings), breaks=10,
-     xlab ="notes",
-     main="répartitions des notes normalisés",
-     labels = TRUE)
-```
-inspection par utilisateur
-```{r echo=FALSE}
+```{r, echo=FALSE,results='hide'}
+#inspection par utilisateur
 #nombre de notes donnés par le premier user
 #8 animés noté par l'user 1
 rowCounts(rrm_anime [1,]) 
 #les notes qu'a données l'user 1 pour chaque animé
-colCounts(rrm_anime [1,]) 
-#afficher les notes du premier user
-lapply(as(rrm_anime[1,], "list"),sort)
+head(colCounts(rrm_anime [1,]))
 ```
 
-```{r,echo=FALSE}
-hist(getRatings(rrm_anime[1,]), breaks=50)
+```{r, echo=FALSE, results='hide'}
+#afficher les notes donné par le premier user
+lapply(as(rrm_anime[1,], "list"),sort)
+
+#hist(getRatings(rrm_anime[1,]), breaks=50)
 ```
 
 ##
-```{r echo=TRUE}
+```{r,echo=TRUE}
 #moyenne des notes donné par utilisateur
 head(rowMeans(rrm_anime)) 
 #moyenne des notes de chaque animé
@@ -234,14 +226,12 @@ class(anime_binary) #binaryRatingMatrix
 
 ## Visualisation de binaryRatingsMatrix
 
-On peut visualiser les binaryRatingsMatrix avec la méthode image.
-
-```{r}
+```{r,echo=TRUE}
  as(anime_binary[1:3,1:6], "matrix")
 ```
 ## Visualisation avec image()
-```{r}
-  #image(brmx_anime_ratings[1:10,1:30])
+On peut visualiser les binaryRatingsMatrix avec la méthode image.
+
+```{r,echo=TRUE}
   image(anime_binary[1:10,1:30])
- 
 ```
