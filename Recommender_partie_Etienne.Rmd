@@ -1,0 +1,247 @@
+---
+title: "Guide d'utilisation recommenderlab"
+author: "Etienne Ismael"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation: default
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library("recommenderlab") #chargement de la library recommenderlab
+```
+
+## Chargement des fichiers
+
+Nous travaillons avec les données d'anime. Ces données représentent les notes attribuées aux animés par 5000 utilisateurs. 
+Les données sont au format dat.
+La méthode read.csv() lit un fichier au format table et créer un dataframe à partir de ces données
+
+```{r echo = TRUE, fig.height=2}
+# read_csv retourne un data.frame
+anime_ratings <-read.csv(
+  "datasets/anime/anime_ratings.dat",
+  header = TRUE,
+  sep = "\t")
+
+class(anime_ratings) # données au format dataframe
+```
+
+## Rappels sur les data.frame
+
+C'est une structure pour stocker des jeux de données. Pour accéder aux éléments d'un data frame, nous utilisons les brackets [lignes, colonnes]
+
+```{r echo=TRUE,  results='hide'}
+anime_ratings[1:5,1:3] #lignes 1 à 5, colonnes 1 à 3
+anime_ratings[1:5, c("User_ID","Anime_ID","Feedback")]
+#anime_ratings[-c(1, 2)]  #uniquement la colonne 3
+```
+
+```{r echo=FALSE}
+knitr::kable(anime_ratings[1:5,1:3])
+```
+
+## Coercition
+
+La coercition consiste à convertir un objet en une classe donnée. RealRatingMatrix est une classe pour un stockage efficace des matrices d'évaluation des éléments utilisateur.
+Les valeurs vides sont représentées par le caractère "."
+
+<!--Il est plus facile de sélectionner les utilisateurs et les items que l'on souhaite manipuler et les comparer avec les realrattingsmatrix.
+C'est une classe d'objet pour un stockage efficace des matrices d'évaluation des éléments utilisateur. Il est optimisé pour stocker des sparse matrix, où presque tous les éléments sont vides
+Les valeurs vides sont représentées par le caractère "."-->
+
+```{r, echo=TRUE}
+#coerciction en realRealRating matrix
+rrm_anime <- as(anime_ratings,'realRatingMatrix')
+#coercition en liste
+as(rrm_anime[1:3,1:10], "list")
+```
+
+## 
+```{r, echo=TRUE}
+#reconversion en dataframe
+head(as(rrm_anime,'data.frame'))
+class(as(rrm_anime, "data.frame")) #type dataframe
+```
+
+## 
+```{r, echo=TRUE}
+#retourne les notes dans une sparse Matrix
+#ci-dessous, un aperçu de la matrice d'évaluation
+#des utilisateurs et de leurs évaluations. Les lignes
+#correspondent aux indexes utilisateurs.
+getRatingMatrix(rrm_anime[1:5,1:20])
+```
+
+```{r, echo=TRUE}
+#La fonction getRatings renvoie les notes 
+#non manquantes depuis une realRatingMatrix 
+#sous forme de vecteur.
+getRatings(rrm_anime[1:10,1:20])
+```
+## 
+```{r, echo=TRUE}
+#Visualisation realRatingsMatrix
+image(rrm_anime[1:10,1:30])
+```
+
+## Normalisation
+
+La normalisation: corriger le biais de notation individuelle.  On a le choix d'utiliser une normalisation par centrage (défaut) ou par Z-score.
+<!--Par centre: On soustrait chaque note disponible de la moyenne des notes de cet utilisateur (ligne).-->
+La normalisation des notes s'effectue grace à la fonction normalize(). 
+La fonction prend en argument un objet RealRatingMatrix
+
+```{r,echo=TRUE}
+#valeurs avant la normalisation
+as(rrm_anime[1:3,1:10], "list")
+```
+## 
+```{r, echo=TRUE}
+#normalisation par centrage
+nrrmx_anime_ratings =  normalize(rrm_anime)
+#normalisation par z-score
+nzrrmx_anime_ratings <- normalize(rrm_anime, 
+                                  method="Z-score")
+#affichage sous forme de liste apres normalisation
+as(nrrmx_anime_ratings[1:3,1:10], "list")
+```
+
+## 
+```{r,echo=TRUE}
+#dénormaliser
+denormalize(nrrmx_anime_ratings)
+#vérifier si l'objet dénormalisé est bien identique
+#retourne true si les deux objets sont strictement 
+#égaux
+identical(denormalize(nrrmx_anime_ratings),rrm_anime) 
+```
+
+## Histogramme
+```{r,echo=TRUE}
+hist(getRatings(rrm_anime),breaks=100)
+```
+
+
+## Par centrage
+```{r,echo=TRUE}
+hist(getRatings(nrrmx_anime_ratings),
+     breaks=100, main="Par centrage")
+```
+
+## Par Z-score
+```{r,echo=TRUE}
+hist(getRatings(nzrrmx_anime_ratings),
+     breaks=100,main="Par Z-score")
+```
+
+## Inspection des propriétés
+
+```{r,echo=TRUE}
+
+dim(rrm_anime) #  4714 Lignes 7157 colonnes  
+nratings(rrm_anime) # 419 943 notes
+summary(getRatings(rrm_anime)) #statistique de base
+```
+
+
+## Inspection des propriétés
+
+```{r, fig.width = 5,echo=TRUE, fig.height=3.7}
+hist(getRatings(rrm_anime), breaks=10,xlab = "notes", 
+     main="répartitions des notes des animés", 
+     labels = TRUE)
+```
+
+```{r, fig.width = 5,echo=FALSE}
+hist(getRatings(nrrmx_anime_ratings), breaks=10,
+     xlab ="notes",
+     main="répartitions des notes normalisés",
+     labels = TRUE)
+```
+inspection par utilisateur
+```{r echo=FALSE}
+#nombre de notes donnés par le premier user
+#8 animés noté par l'user 1
+rowCounts(rrm_anime [1,]) 
+#les notes qu'a données l'user 1 pour chaque animé
+colCounts(rrm_anime [1,]) 
+#afficher les notes du premier user
+lapply(as(rrm_anime[1,], "list"),sort)
+```
+
+```{r,echo=FALSE}
+hist(getRatings(rrm_anime[1,]), breaks=50)
+```
+
+##
+```{r echo=TRUE}
+#moyenne des notes donné par utilisateur
+head(rowMeans(rrm_anime)) 
+#moyenne des notes de chaque animé
+head(colMeans(rrm_anime)) 
+
+```
+
+
+##
+```{r,echo=TRUE}
+hist(rowMeans(rrm_anime), breaks=50, 
+     main="Moyenne des notes donné par utilisateur")
+```
+
+##
+```{r,echo=TRUE}
+hist(colMeans(rrm_anime), breaks=50, 
+     main="Moyenne des notes donné par animé")
+```
+
+##
+```{r,echo=TRUE}
+hist(colMeans(nrrmx_anime_ratings), breaks=50, 
+     main="données normalisées")
+```
+
+##
+```{r,echo=TRUE}
+hist(rowCounts(rrm_anime), breaks=50,
+     xlab = "notes par personne",
+     main = "nombre de notes par personne")
+```
+
+##
+```{r,echo=TRUE}
+hist(colCounts(rrm_anime), breaks=50, 
+     xlab = "notes par animé",
+     main = "nombre de notes par animé")
+```
+
+## Binarisation des données
+
+La binarisation permet de réduire la note à un avis positif (1) ou un avis négatif (0). La façon la plus simple de binariser est d'utiliser la fonction binarize().On peut fixer un seuil de notation.
+
+```{r,echo=TRUE}
+#les notes qui sont  >=  à minRating sont positifs
+ #on fixe le seuil à 4
+anime_binary <- binarize(rrm_anime, minRating=4)
+
+#vérification de la classe de anime_binary
+class(anime_binary) #binaryRatingMatrix
+
+```
+
+## Visualisation de binaryRatingsMatrix
+
+On peut visualiser les binaryRatingsMatrix avec la méthode image.
+
+```{r}
+ as(anime_binary[1:3,1:6], "matrix")
+```
+## Visualisation avec image()
+```{r}
+  #image(brmx_anime_ratings[1:10,1:30])
+  image(anime_binary[1:10,1:30])
+ 
+```
