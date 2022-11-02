@@ -1,0 +1,208 @@
+---
+title: "arules_groupe_2"
+author: 'Miary RAMAMONJISOA '
+date: "2022-10-01"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Installation des package à utiliser.
+```{r library}
+library("readr")
+library("stringr")
+library("plyr")
+library("arules")
+library("arulesViz")
+library("plotly")
+```
+
+# Chargement des données
+
+# Données sur les films
+```{r read data film}
+movies <- read_csv("datasets/movie/movies.csv")
+movies <- subset(movies, select=c("id" ,"title"))
+notation <- read_csv("datasets/movie/notation.csv")
+```
+
+# on supprime les virgules dans les titres
+```{r delete comma}
+movies $title<- str_replace_all(movies$title, ",", " ")
+```
+
+
+# Données sur les films regardés par client
+```{r watching customer movie }
+watching <- read.table("datasets/movie/ratings.dat",header=FALSE,sep=":",colClasses = c(NA, "NULL"))
+colnames(watching)<-c("userId", "movieId", "rating","timestamp")
+watching <- subset(watching, select=c("userId" ,"movieId", "rating"))
+```
+
+# changement de format
+```{r change format}
+watching$movieId<-as.character(watching$movieId)
+watching$userId<-as.character(watching$userId)
+```
+
+# Nombre de visionnage par film
+```{r number visionage}
+freq_movie <-count(watching,c("movieId"))
+names(freq_movie)<-c("movieId","Number_view")   
+```
+
+# Répartition des notes moyennes
+```{r note}
+freq_rate <-as.data.frame(tapply(watching$rating,watching$movieId,mean))
+names(freq_rate)<-c("Notes_moyennes")
+freq_rate$movieId<-rownames(freq_rate)   
+```
+
+# On en conserve que les films avec des notes supérieures ou égales à 4
+```{r note > 4}
+watching <- watching[watching$rating>=4,]
+```
+
+# On filtre les films peu visonnés (500 vues)
+```{r filter movie}
+watching<-merge(x = watching, y = freq_movie, by = "movieId", all.x = TRUE)
+watching<-watching[watching$Number_view>500,]
+```
+
+# On ajoute le nom des films et on ne conserve que les films qui ont un nom
+```{r add name}
+names(movies)=c("movieId", "titre")
+watching<-merge(x = watching, y = movies, by = "movieId")
+head(watching)
+```
+
+# On transforme les données en données "panier"
+```{r transform data}
+watching_itemList <- ddply(watching,c("userId"),
+function(df1)paste(df1$titre,
+collapse = ","))
+watching_itemList<-watching_itemList$V1
+
+write.csv(watching_itemList,"ItemList.csv", quote = FALSE, row.names = TRUE)
+
+head(watching_itemList)
+
+```
+
+
+# Visualisation de sous ensembles de règles
+
+L'exploration de règles d'association est une méthode d'exploration de données disponible dans R. Nous utilisons le package arulesViz qui implémente plusieurs techniques de visualisation connues et nouvelles pour explorer les règles d'association. 
+
+
+Pour les exemples, nous avons choisi le dataset movie. Nous avons un ensemble de films notés par les utilisateurs, comme  ça pourrait être le cas par exemple sur Netflix ou sur une autre plateforme de VOD.
+
+
+## Calcul des règles d'association
+
+Nous minons les règles d'association en utilisant l'algorithme Apriori implémenté dans arules.
+
+```{r apriori}
+transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1)
+rules <- apriori(transaction,parameter = list(sup = 0.05, conf = 0.6,target="rules"));
+
+inspect(head(rules, n = 20))
+```
+
+
+## Scatter plot
+Une visualisation simple des règles d'association consiste à utiliser un nuage de points avec deux mesures d'intérêts sur les axes. 
+La méthode par défaut plot() dans arulesViz est un nuage de points utilisant le support et la confiance sur les axes. De plus, une troisième mesure (par défaut : lift) est utilisée comme couleur (niveau de gris) des points. Une clé de couleur est fournie à droite du tracé.
+
+```{r plot rules}
+plot(rules)
+```
+
+Nous pouvons voir dans ce graphique que les règles avec une portance élevée ont généralement un support relativement faible. 
+
+```{r quality rules}
+head(quality(rules))
+```
+
+Le graphique ci-dessous à deux clés représente que l'ordre et le support ont une relation inverse très forte, ce qui est un fait connu pour les règles d'association.
+
+```{r quality key}
+plot(rules, method = "two-key plot")
+```
+
+##  Grouped matrix-based visualization
+
+Pour visualiser la matrice groupée, nous utilisons un graphique à bulles avec des groupes antécédents comme colonnes et conséquents en lignes. La couleur des ballons représente la mesure d'intérêt agrégée dans le groupe avec un certain conséquent et la taille du ballon montre la
+soutien agrégé. La visualisation matricielle avec des antécédents groupés pour l'ensemble de règles extraites précédemment peut être facilement créé par :
+
+```{r plot group matrix}
+plot(rules, method = "matrix")
+```
+
+
+## Visualization as Graph
+
+Techniques basées sur les graphes visualisent les règles d'association utilisant des sommets et des arêtes où les sommets annotés avec des étiquettes d'éléments représentent les éléments et les ensembles d'éléments ou les règles sont représentés comme un deuxième ensemble de sommets. 
+Pour les parcelles suivantes nous sélectionnons les 10 règles avec le lift le plus élevé.
+
+```{r selection 10 rules and graph}
+subrules2 <- head(rules, n = 10, by = "lift")
+plot(subrules2, method = "graph")
+```
+ 
+
+
+# Implémentation de nouvelle mesure de qualité
+
+Il existe plusieurs nouvelles mesures de qualité, nous allons voir le coefficient de correlation linéaire. 
+Le coefficient de corrélation linéaire quantifie la force du lien linéaire entre les deux caractères d’une distribution. Pour le déterminer, on peut procéder par estimation de son allure graphique.
+Le coefficient de corrélation aura toujours une valeur qui se situe dans l'intervalle [-1, 1]. 
+
+## Quelques repère
+
+– Si le coefficient de corrélation $r$ est nul, on dit que les deux paramètres sont indépendants.
+– Si $r>0$, ils varient dans le même sens.
+– Si $r<0,4$, la corrélation est faible.
+– Dans le cas d’un est, il faut que $p < 5~\%$.
+
+
+## Un exemple
+
+Cherchons s’il y a une corrélation entre l'utilisateur et le film.
+
+## Des graphiques
+
+Commençons par tracer le nuage de points.
+
+```{r create graph}
+plot(notation$userId,notation$movieId)
+```
+
+On peut obtenir ce coefficient uniquement par la commande cor :
+
+```{r get corelation}
+cor.test(notation$userId,notation$movieId,use="complete.obs")
+```
+
+Nous y voyons que  ce qui est très faible.
+
+
+# Aide à la décision
+
+Revenons sur les règles précédemment mentionnées.Nous allons afficher les top 10 des règles le plus pertinentes avec sa graphe.
+
+```{r rules 10}
+inspect(head(rules, n = 10))
+
+plot(rules[1:10], method="graph", control=list(type="items"), cex=0.7)
+```
+
+Nous voyons des cercles qui représentent les règles d’association entre 2 films, leur taille représente le support et l’intensité de leur couleur représente le lift.
+
+Cette visualisation permet d’avoir l’ensemble des règles de manière globale. Par exemple, les utilisateurs ayant regardé Blood Diamond ont plus de chance de regarder également Rope. Et que 3 films ont tendance à amener les utilisateurs à regarder Rocky IV : Rocky V, Blood Diamond et surtout Sweet Sixteen.
