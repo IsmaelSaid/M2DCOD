@@ -59,6 +59,7 @@ notation_film <- read_csv("ratings_small.csv")
 #afficher les 20 premiers lignes de données
 notation_film[1:20,]
 
+#renommer les noms des colonnes du dataset notation_film
 colnames(notation_film)<-c("userId", "filmId", "note","timestamp")
 ```
 
@@ -174,6 +175,14 @@ classe_note <- data.frame(
         "Borne 4 = min + 4a1",
         "Borne 5 = min + 5a1",
         "Borne 6 = min + 6a1",
+        "Borne 7 = min + 7a1",
+        "Borne 8 = min + 8a1",
+        "Borne 9 = min + 9a1",
+        "Borne 10 = min + 10a1",
+        "Borne 11 = min + 11a1",
+        "Borne 12 = min + 11a1",
+        "Borne 13 = min + 12a1",
+        "Borne 14 = min + 13a1",
         "Borne 15 = min + 14a1",
         "Borne 16 = min + 15a1",
         "Borne 17 = min + 16a1",
@@ -186,9 +195,17 @@ classe_note <- data.frame(
         min(notation_film$note) + 4*a1,
         min(notation_film$note) + 5*a1,
         min(notation_film$note) + 6*a1,
+        min(notation_film$note) + 7*a1,
+        min(notation_film$note) + 8*a1,
+        min(notation_film$note) + 9*a1,
+        min(notation_film$note) + 10*a1,
+        min(notation_film$note) + 11*a1,
+        min(notation_film$note) + 12*a1,
+        min(notation_film$note) + 13*a1,
         min(notation_film$note) + 14*a1,
         min(notation_film$note) + 15*a1,
         min(notation_film$note) + 16*a1,
+        min(notation_film$note) + 17*a1,
         max(notation_film$note)
         )
 )
