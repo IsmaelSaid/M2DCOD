@@ -1,50 +1,43 @@
 ---
 title: "Guide d'utilisation recommenderlab"
-author: "Etienne Ismael"
+author: "Etienne Baillif & Ismael Said"
 date: "`r Sys.Date()`"
 output:
-  beamer_presentation: default
   slidy_presentation: default
   ioslides_presentation: default
+  beamer_presentation: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-library("recommenderlab")
-require(methods)
+library("recommenderlab") #chargement de la library recommenderlab
 ```
 
-# Partie 1.
-
+# Partie 1: Etienne Baillif
 ## Chargement des fichiers
 
-Nous travaillons avec les données anime. Ces données représentent les notes attribuées aux animés par 5000 utilisateurs. Les données sont au format dat. La méthode read.csv() lit un fichier au format table et créer un dataframe à partir de ces données
+Nous travaillons avec les données d'anime. Ces données représentent les notes attribuées aux animés par 5000 utilisateurs. 
+Les données sont au format dat.
+La méthode read.csv() lit un fichier au format table et créer un dataframe à partir de ces données
 
-```{r echo = TRUE}
+```{r echo = TRUE, fig.height=2}
 # read_csv retourne un data.frame
-anime_history <-read.csv("datasets/anime/anime_history.dat",
-                         header = TRUE,
-                         sep = "\t")
-anime_info <-read.csv("datasets/anime/anime_info.dat",
-                      header = TRUE,
-                      sep = "\t")
-anime_ratings <-read.csv("datasets/anime/anime_ratings.dat",
-                         header = TRUE,
-                         sep = "\t")
+anime_ratings <-read.csv(
+  "datasets/anime/anime_ratings.dat",
+  header = TRUE,
+  sep = "\t")
 
 class(anime_ratings) # données au format dataframe
 ```
 
 ## Rappels sur les data.frame
 
-C'est une structure pour stocker des jeux de données. Pour accèder aux elements d'un dataframe, nous utilisons les brackets [lignes,colonnes]
+C'est une structure pour stocker des jeux de données. Pour accéder aux éléments d'un data frame, nous utilisons les brackets [lignes, colonnes]
 
 ```{r echo=TRUE,  results='hide'}
 anime_ratings[1:5,1:3] #lignes 1 à 5, colonnes 1 à 3
 anime_ratings[1:5, c("User_ID","Anime_ID","Feedback")]
-# Cette ligne ralentit considéralement l'exportation en pdf. 
-# anime_ratings[-c(1, 2)]  #uniquement la colonne 3
-summary(anime_ratings) #statistique de base
+#anime_ratings[-c(1, 2)]  #uniquement la colonne 3
 ```
 
 ```{r echo=FALSE}
@@ -53,329 +46,534 @@ knitr::kable(anime_ratings[1:5,1:3])
 
 ## Coercition
 
-La coercition consiste à convertir un objet en une classe donnée. Par défaut, read.csv retourne un data.frame. Il est nécessaire de le transformer vers un format adapté pour pouvoir y faire des opérations supplémentaires.
+La coercition consiste à convertir un objet en une classe donnée. RealRatingMatrix est une classe pour un stockage efficace des matrices d'évaluation des éléments utilisateur.
+Les valeurs vides sont représentées par le caractère "."
 
-## Coercition du data.frame vers un objet realratingsMatrix
-
-Il est plus facile de sélectionner les utilisateurs et les items que l'on souhaite manipuler et les comparer avec les realrattingsmatrix. Un objet realratingsmatrix stocke les données dans un format sparse Matrix qui enregistre uniquement les valeurs non vides. Les valeurs vides sont représentées par le caractère "."
-
-```{r, echo=TRUE,results='hide'}
-rrm_anime <- as(anime_ratings,'realRatingMatrix')
-# opération inverse 
-head(as(rrm_anime,'data.frame'))
-head(getRatingMatrix(rrm_anime)) #affiche la matrice au format sparse Matrix
-```
-
-```{r echo=FALSE}
-knitr::kable(head(as(rrm_anime,'data.frame')))
-```
-
-## Fonctions intéressantes realRatingsMatrix
-
--   nratings
--   dim
--   colCounts
--   rowCounts
--   colMeans
--   rowMeans
-
-## Propriétés des données
-
-```{r,echo=TRUE,results='hide'}
-dim(rrm_anime) #  4714 Lignes 7157 colonnes  
-nratings(rrm_anime) # 419943 notes
-```
-
-## Donneés interessantes
-
-```{r echo=TRUE}
-head(colMeans(rrm_anime)) # signification
-head(colCounts(rrm_anime)) # signification 
-head(rowCounts(rrm_anime)) # signification
-```
-
-## Visualisation realRatingsMatrix
+<!--Il est plus facile de sélectionner les utilisateurs et les items que l'on souhaite manipuler et les comparer avec les realrattingsmatrix.
+C'est une classe d'objet pour un stockage efficace des matrices d'évaluation des éléments utilisateur. Il est optimisé pour stocker des sparse matrix, où presque tous les éléments sont vides
+Les valeurs vides sont représentées par le caractère "."-->
 
 ```{r, echo=TRUE}
-image(rrm_anime[1:10,1:30])
+#coerciction en realRealRating matrix
+rrm_anime <- as(anime_ratings,'realRatingMatrix')
+#coercition en liste
+as(rrm_anime[1:3,1:10], "list")
 ```
 
-## Histogramme
+---
 
-```{r, fig.width = 10,echo=TRUE}
-hist(getRatings(rrm_anime),breaks = 10,labels = TRUE)
+```{r, echo=TRUE}
+#reconversion en dataframe
+head(as(rrm_anime,'data.frame'))
+class(as(rrm_anime, "data.frame")) #type dataframe
+```
+
+## getRatingMatrix
+retourne les notes dans une sparse Matrix
+ci-dessous, un aperçu de la matrice d'évaluation
+des utilisateurs et de leurs évaluations. Les lignes
+correspondent aux indexes utilisateurs.
+```{r, echo=TRUE}
+getRatingMatrix(rrm_anime[1:5,1:20])
+```
+
+## getRatings
+
+La fonction getRatings renvoie les notes 
+non manquantes depuis une realRatingMatrix 
+sous forme de vecteur.
+
+```{r, echo=TRUE}
+getRatings(rrm_anime[1:10,1:20])
+```
+## 
+```{r, echo=TRUE}
+#Visualisation realRatingsMatrix
+image(rrm_anime[1:10,1:30])
 ```
 
 ## Normalisation
 
-<!-- La normalisation tente de réduire le biais de notation individuel en centrant les données par ligne. On a le choix d'utiliser une normalisation par centrage (défaut) ou par zscore. Par centre: On soustrait chaque note disponible de la moyenne des notes de cet utilisateur (ligne) On peut normaliser les notes avec la fonction normalize. La fonction prend en argument un objet RealRatingMatrix -->
-
-```{r, echo=TRUE}
-#normalisation par centre
-nrrmx_anime_ratings =  normalize(rrm_anime)
-head(getRatings(nrrmx_anime_ratings))
-#normalisation par z-score
-nzrrmx_anime_ratings <- normalize(rrm_anime, method="Z-score")
-head(getRatings(nzrrmx_anime_ratings))
-```
-
-## Histogramme des notes normalisées
+La normalisation: corriger le biais de notation individuelle.  On a le choix d'utiliser une normalisation par centrage (défaut) ou par Z-score.
+<!--Par centre: On soustrait chaque note disponible de la moyenne des notes de cet utilisateur (ligne).-->
+La normalisation des notes s'effectue grace à la fonction normalize(). 
+La fonction prend en argument un objet RealRatingMatrix
 
 ```{r,echo=TRUE}
-hist(getRatings(normalize(rrm_anime)),breaks=100)
+#valeurs avant la normalisation
+as(rrm_anime[1:3,1:7], "matrix")
+```
+## 
+```{r, echo=TRUE}
+#normalisation par centrage
+nrrmx_anime_ratings =  normalize(rrm_anime)
+#normalisation par z-score
+nzrrmx_anime_ratings <- normalize(rrm_anime, 
+                                  method="Z-score")
+#affichage sous forme de liste apres normalisation
+as(nrrmx_anime_ratings[1:3,1:7], "matrix")
+```
+
+## Dénormalisation
+```{r,echo=TRUE}
+#dénormaliser
+denormalize(nrrmx_anime_ratings)
+#vérifier si l'objet dénormalisé est bien identique
+#retourne true si les deux objets sont strictement 
+#égaux
+identical(denormalize(nrrmx_anime_ratings),rrm_anime) 
+```
+
+## Histogramme
+
+```{r, echo=TRUE, fig.height=7}
+hist(getRatings(rrm_anime), breaks=10,xlab = "notes", 
+     main="répartitions des notes des animés", 
+     labels = TRUE)
+```
+
+## Par centrage
+```{r,echo=TRUE, fig.height=5}
+hist(getRatings(nrrmx_anime_ratings),
+     breaks=100, main="Par centrage")
+```
+
+## Par Z-score
+```{r,echo=TRUE, fig.height=5}
+hist(getRatings(nzrrmx_anime_ratings),
+     breaks=100,main="Par Z-score")
+```
+
+## Inspection des propriétés
+
+```{r,echo=TRUE}
+
+dim(rrm_anime) #  4714 Lignes 7157 colonnes  
+nratings(rrm_anime) # 419 943 notes
+summary(getRatings(rrm_anime)) #statistique de base
+```
+
+```{r, echo=FALSE,results='hide'}
+#inspection par utilisateur
+#nombre de notes donnés par le premier user
+#8 animés noté par l'user 1
+rowCounts(rrm_anime [1,]) 
+#les notes qu'a données l'user 1 pour chaque animé
+head(colCounts(rrm_anime [1,]))
+```
+
+```{r, echo=FALSE, results='hide'}
+#afficher les notes donné par le premier user
+lapply(as(rrm_anime[1,], "list"),sort)
+
+#hist(getRatings(rrm_anime[1,]), breaks=50)
+```
+
+##
+```{r,echo=TRUE}
+#moyenne des notes donné par utilisateur
+head(rowMeans(rrm_anime)) 
+#moyenne des notes de chaque animé
+head(colMeans(rrm_anime)) 
+
+```
+
+
+##
+```{r,echo=TRUE}
+hist(rowMeans(rrm_anime), breaks=50, 
+     main="Moyenne des notes donné par utilisateur")
+```
+
+##
+```{r,echo=TRUE}
+hist(colMeans(rrm_anime), breaks=50, 
+     main="Moyenne des notes donné par animé")
+```
+
+##
+```{r,echo=TRUE}
+hist(colMeans(nrrmx_anime_ratings), breaks=50, 
+     main="données normalisées")
+```
+
+##
+```{r,echo=TRUE}
+hist(rowCounts(rrm_anime), breaks=50,
+     xlab = "notes par personne",
+     main = "nombre de notes par personne")
+```
+
+##
+```{r,echo=TRUE}
+hist(colCounts(rrm_anime), breaks=50, 
+     xlab = "notes par animé",
+     main = "nombre de notes par animé")
 ```
 
 ## Binarisation des données
 
-La binarisation permet de réduire la note à un avis positif (1) ou un avis négatif (0). La facon la plus simple de binariser est d'utiliser la fonction binarize().On peut fixer un seuil de notation.
-
-```{r}
-brmx_anime_ratings <- as(anime_ratings,'binaryRatingMatrix')
-#les notes qui sont à >=  minRating sont positif
-anime_binary <- binarize(rrm_anime, minRating=4)
-class(anime_binary)
-# getRatings(anime_binary)
-```
-
-## Visualisation binary ratings matrix
-
-On peut aussi visualiser les binary ratings matrix avec la méthode image.
-
-```{r}
-  #image(brmx_anime_ratings[1:10,1:30])
-  image(anime_binary[1:10,1:30])
-  as(anime_binary[1:10,1:30], "matrix")
-```
-
-# Evaluation des modèles de recommendations
-
-## Mise en situation
-
-## Identifier le problème
-
-Qu'est ce que je pourrais bien lui recommander ?
+La binarisation permet de réduire la note à un avis positif (1) ou un avis négatif (0). La façon la plus simple de binariser est d'utiliser la fonction binarize().On peut fixer un seuil de notation.
 
 ```{r,echo=TRUE}
-image(rrm_anime[1:1,1:25])
+#les notes qui sont  >=  à minRating sont positifs
+ #on fixe le seuil à 4
+anime_binary <- binarize(rrm_anime, minRating=4)
+
+#vérification de la classe de anime_binary
+class(anime_binary) #binaryRatingMatrix
+
 ```
 
-## Comprendre les données
+## Visualisation de binaryRatingsMatrix
 
-```{r,echo=FALSE}
-totals_ratings = 419943
+```{r,echo=TRUE}
+ as(anime_binary[1:3,1:6], "matrix")
+```
+## Visualisation avec image()
+On peut visualiser les binaryRatingsMatrix avec la méthode image.
+
+```{r,echo=TRUE}
+  image(anime_binary[1:10,1:30])
 ```
 
--   $X \in \mathbb{R}^{4714}$ Ensemble des utilisateurs.
--   $S \in \mathbb{R}^{7157}$ Ensemble des Animés.
--   Constat : notes biaisées.
--   Nombre total de notes : 419943.
--   200 utilisateurs ont notées une fois.
--   1033 Anime ont été notées une fois.
+# Partie 2: Said Ismael
 
-## Nettoyer et réduire le volume de donnée
+## Contexte
 
-```{r,echo=FALSE,results='hide'}
-dataset = rrm_anime[rowCounts(rrm_anime) > 50 ,colCounts(rrm_anime) > 50]
-dataset = dataset[1:1000,1:1000]
-reduction = (419943-402195) * 100 / 419943
-reduction
-dataset
+-   $X =$ Ensemble des utilisateurs.
+-   $S =$ Ensemble des items.
+-   $R =$ Ensemble des notes $\in [-10,10]$
+
+```{r,echo=TRUE}
+data("Jester5k")
+image(Jester5k[1:20, 1:75])
 ```
 
--   $X \in \mathbb{R}^{3691}$Ensemble des utilisateurs.
--   $S \in \mathbb{R}^{3531}$ Ensemble des Animés.
--   Nombre total de notes : 402195
--   Reduction de $4.22\%$
+## Objectifs
 
-## Préparer ses données
+-   Prédire la note qu'un utilisateur va attribuer à un item.
+-   Réaliser des recommendation pour un utilisateur.
+-   Evaluer la prédiction d'une note.
+-   Evaluer les recommendations.
 
-```{r,echo=FALSE,results='hide'}
-set.seed(123)
+## Création d'un schéma d'évaluation basique
+
+```{r,echo=TRUE}
 e <- evaluationScheme(
   train = 0.9,
-  dataset[1:200],
+  Jester5k,
   method="split",
-  given=9,
-  goodRating=5)
-```
-
-### Séparer ses données
-
-``` r
-evaluationScheme(data, method, train, k...)
-```
-
-### Normaliser ses données
-
-``` r
-normalise(data, method, train, k...)
+  given=5,
+  goodRating=0)
 ```
 
 ## Vérifiez la répartition des notes
 
-```{r,echo=FALSE}
+```{r,echo=TRUE,fig.height=6}
 custom_summary = data.frame(
   training_data = colMeans(getData(e,"train")),
-  validation_data = colMeans(getData(e,"known"))
-)
+  validation_data = colMeans(getData(e,"known")))
 boxplot(custom_summary)
 ```
-
-## Les différents modèles
-
--   POPULAR
--   IBCF
--   UBCF
 
 ## Instancier un modèle de recommendation
 
 ```{r,echo=TRUE}
-r1 <- Recommender(getData(e,"train"), method = "IBCF")
-r2 <- Recommender(getData(e,"train"), method = "POPULAR")
-r3 <- Recommender(getData(e,"train"), method = "UBCF")
+rec_rand <- Recommender(getData(e,"train"), method = "RANDOM")
+rec_ibcf <- Recommender(getData(e,"train"), method = "IBCF")
+rec_ubcf <- Recommender(getData(e,"train"), method = "UBCF")
+rec_pop <- Recommender(getData(e,"train"), method = "POPULAR")
 ```
 
-## Réaliser une prediction
+## Prédire une note (ratings)
 
 ```{r,echo=TRUE}
-p1 <- predict(r1, getData(e,"known"),type="ratings")
-p2 <- predict(r2, getData(e, "known"),type="ratings")
-p3 <- predict(r3, getData(e, "known"),type = "ratings")
+pred_ibcf <- predict(rec_ibcf, getData(e,"known"),
+                     type="ratings")
+pred_ubcf <- predict(rec_ubcf, getData(e, "known"),
+                     type="ratings")
+pred_pop <- predict(rec_pop, getData(e, "known"),
+                    type = "ratings")
+pred_rand <- predict(rec_rand, getData(e, "known"),
+                     type = "ratings")
 ```
 
 ## Evaluer la prediction sur les notes
 
 -   Métriques
-
-    -   $MSE = \frac{1}{|R|} \displaystyle\sum_{(x,i)\in R}{(\hat{r_{xi}} - r_{xi})}$
-    -   $RMSE = \sqrt{\frac{1}{|R|} \displaystyle\sum_{(x,i)\in R}{(\hat{r_{xi}} - r_{xi})}}$
+    -   $MSE = \frac{1}{|R|} \displaystyle\sum_{(x,i)\in R}{(\hat{r_{xi}} - r_{xi})²}$
+    -   $RMSE = \sqrt{\frac{1}{|R|} \displaystyle\sum_{(x,i)\in R}{(\hat{r_{xi}} - r_{xi})}²}$
     -   $MAE = \frac{1}{|R|} \displaystyle\sum_{(x,i)\in R}{|\hat{r_{xi}} - r_{xi}|}$
+-   Résultats:
 
--   Résultats
+------------------------------------------------------------------------
 
-```{r,echo=FALSE}
+```{r,echo=TRUE}
 error <- rbind(
-  IBCF = calcPredictionAccuracy(p1, getData(e, "unknown")),
-  POPULAR = calcPredictionAccuracy(p2, getData(e, "unknown")),
-  UBCF = calcPredictionAccuracy(p3, getData(e, "unknown"))
-  )
+  IBCF = calcPredictionAccuracy(pred_ibcf,
+                                getData(e, "unknown")),
+  UBCF = calcPredictionAccuracy(pred_ubcf,
+                                getData(e, "unknown")),
+  POP = calcPredictionAccuracy(pred_pop,
+                               getData(e,"unknown")),
+  RAND = calcPredictionAccuracy(pred_rand,
+                                getData(e,"unknown")))
+```
+
+```{r,echo=FALSE,fig.height=6}
 knitr::kable(data.frame(error))
 ```
 
-## Evaluation d'un algorithme de recommendation
-
-Evaluation par validation croisée 4 folds
+## Schéma d'évaluation par validation croisée
 
 ```{r,echo=TRUE,results='hide'}
-eval_cross_topn_scheme <- evaluationScheme(
+
+e_cv <- evaluationScheme(
   train = 0.9,
-  dataset,
+  Jester5k[1:1000],
   method="cross",
-  k=4,
-  given=1,
-  goodRating=5)
+  k=3,
+  given=3,
+  goodRating=0)
 ```
 
-```{r,echo=FALSE,results='hide'}
-results_ibcf <- evaluate(eval_cross_topn_scheme,
-                    method='IBCF',
-                    type = "ratings")
-result_ibcf = getResults(results_ibcf)
-rmse_ibcf = lapply(result_ibcf,function(x) x[[1,"RMSE"]])
-cv_metrics = data.frame(rmse_ibcf = unlist(rmse_ibcf))
+```{r,echo=TRUE, results='hide',warning=FALSE}
+algorithms <- list(
+  "random items" = list(name="RANDOM", param=NULL),
+  "popular items" = list(name="POPULAR", param=NULL),
+  "user-based CF" = list(name="UBCF", param=list(nn=50)),
+  "item-based CF" = list(name="IBCF", param=list(k=50)),
+  "SVD approximation" = list(name="SVD", param=list(k = 50)))
+cv_results = evaluate(e_cv,algorithms,type = "ratings")
 ```
-
-## RMSE IBCF
 
 ```{r}
-boxplot(cv_metrics)
+rmse = data.frame(
+  RMSERAND = unlist(lapply(getResults(cv_results[["random items"]]),'[[',1)),
+  RMSEPOP = unlist(lapply(getResults(cv_results[["popular items"]]),'[[',1)),
+  RMSEUBCF = unlist(lapply(getResults(cv_results[["user-based CF"]]),'[[',1)),
+  RMSEIBCF = unlist(lapply(getResults(cv_results[["item-based CF"]]),'[[',1)),
+  RMSESVD = unlist(lapply(getResults(cv_results[["SVD approximation"]]),'[[',1)))
 ```
 
-## Evaluation d'un algorithme de recommendation top-N
+## Resultat évaluation par validation croisé 3 folds
 
-```{r,results='hide',echo=TRUE}
-scheme <- evaluationScheme(dataset,
-                           method="cross",k=2,
-                           given=1,
-                           goodRating=5)
+-   Moyenne RMSE
 
-results <- evaluate(scheme,
-                    method="POPULAR",
-                    type = "topNList",
-                    n=c(seq(10, 500, by = 50)))
-
-random <- evaluate(scheme,
-                    method="RANDOM",
-                    type = "topNList",
-                    n=c(seq(10, 500, by = 50)))
+```{r,fig.width=4}
+knitr::kable(rmse)
+knitr::kable(data.frame(colMeans(rmse)))
 ```
 
-## Métriques
+-   Peut on faire mieux ?
+
+## Optimisation hyperparamètre
+
+```{r,echo=TRUE,results='hide',warning=FALSE}
+algorithms <- list(
+  "SVD app 10" = list(name="SVD", param=list(k = 10)),
+  "SVD app 50" = list(name="SVD", param=list(k = 50)),
+  "SVD app 90" = list(name="SVD", param=list(k = 90)))
+SVD_hpt_tuning = evaluate(e_cv,algorithms,type = "ratings")
+rmse_svd_hpt = data.frame(
+  SVDK10 = unlist(lapply(getResults(SVD_hpt_tuning[["SVD app 10"]]),'[[',1)),
+  SVDK50 = unlist(lapply(getResults(SVD_hpt_tuning[["SVD app 50"]]),'[[',1)),
+  SVDK90 = unlist(lapply(getResults(SVD_hpt_tuning[["SVD app 90"]]),'[[',1)))
+```
+
+## Résultats
+
+```{r}
+knitr::kable(rmse_svd_hpt)
+knitr::kable(data.frame(colMeans(rmse_svd_hpt)))
+```
+
+-   Autre moyen de visualisation ?
+
+------------------------------------------------------------------------
+
+## Synthèse des résultats
+
+### RMSE SVD pour K = 10,50,90
+
+```{r}
+boxplot(rmse_svd_hpt)
+```
+
+## Réaliser des recommendations (topNList)
+
+```{r,echo=TRUE,warning=FALSE,results='hide'}
+algorithms <- list(
+  "random items" = list(name="RANDOM", param=NULL),
+  "popular items" = list(name="POPULAR", param=NULL),
+  "user-based CF" = list(name="UBCF", param=list(nn=50)),
+  "item-based CF" = list(name="IBCF", param=list(k=50)),
+  "SVD approximation" = list(name="SVD", param=list(k = 50)))
+topn_results = evaluate(e_cv,algorithms,
+                        type = "topNList",
+                        n=c(seq(10, 100, by = 5)))
+```
+
+-   Comment évaluer un modèle ?
+
+## Evaluer les recommendations (topnlist)
+
+### Les métriques
 
 -   TP : est un résultat où le modèle prédit *correctement* la classe *positive*.
-
 -   TN : est un résultat où le modèle prédit *correctement* la classe *negative*.
-
 -   FP : est un résultat où le modèle prédit *incorrectement* la classe *positive*.
-
 -   FN : est un résultat où le modèle prédit *de manière incorrecte* la classe *négative*.
 
-## Métriques
+------------------------------------------------------------------------
 
 -   Precision : Quelle proportion d'identifications positives était effectivement correcte ?
     -   $Precision=\frac{TP}{TP+FP}$
 -   Rappel : Quelle proportion de résultats positifs réels a été identifiée correctement ?
     -   $Rappel=\frac{TP}{TP+FN}$
 
-## Calculer les différentes métriques
+------------------------------------------------------------------------
 
-```{r,echo=FALSE}
-knitr::kable(data.frame(avg(results)))
-```
-
-## Courbe ROC Popular
-
-```{r,echo=TRUE}
-plot(results,"ROC",annotate=TRUE)
-```
-
-## Courbe ROC Random
-
-```{r,echo=TRUE}
-plot(random,"ROC",annotate=TRUE)
-```
-
-## Prec/Rec
-
-```{r,echo=TRUE}
-plot(results,"prec/rec",annotate=TRUE)
-```
-
-## Comparaison de plusieurs algorithmes 
-
-```{r}
-scheme <- evaluationScheme(dataset,
-                           method="split",
-                           train = .9,
-                           given=-5,
-                           goodRating=5)
-```
-
-```{r,echo=TRUE}
-algorithms <- list(
-  "random items" = list(name="RANDOM", param=NULL),
-  "popular items" = list(name="POPULAR", param=NULL),
-  "user-based CF" = list(name="UBCF", param=list(nn=50)),
-  "item-based CF" = list(name="IBCF", param=list(k=50)),
-  "SVD approximation" = list(name="SVD", param=list(k = 50))
-)
-```
+### Récupérer les résultats
 
 ```{r,echo=TRUE,results='hide'}
-results <- evaluate(scheme, algorithms, type = "topNList", n=c(seq(10, 500, by = 50)))
+getConfusionMatrix(topn_results[['item-based CF']])[[1]]
 ```
-## Roc curve 
-```{r,echo=TRUE}
- plot(results, annotate=c(1,3), legend="bottomright")
 
+### Agréger les folds
+
+```{r,echo=TRUE}
+avg_ibcf = data.frame(
+  avg(topn_results)[["item-based CF"]])[1:5,
+                                        c('TP','FP','TN','FN','n')]
+```
+
+### Matrice de confusion IBCF
+
+```{r}
+knitr::kable(avg_ibcf)
+```
+
+## Visualisation ROC / AUC
+
+-   La courbe ROC/AUC permet de mesurer les performances des différents modèles par rapport au modèle aléatoire.
+
+```{r,echo=FALSE,fig.height=6}
+plot(topn_results)
+```
+
+-   La forme du meilleur modèle théorique ?\
+-   Quel est le meilleur alorithme selon l'AUC ?
+
+## Courbe precsision/rappel
+
+```{r}
+plot(topn_results,"prec/rec")
+```
+
+-   Peut-on faire mieux ?
+    -   Méthode hybride.
+
+## Méthode hybride
+
+```{r,echo=TRUE,results='hide'}
+algorithms <- list(
+  "popular items" = list(name="POPULAR", param=NULL),
+   "HYBRID (SVD + POP)" = list(name = "HYBRID", param =
+      list(recommenders =list(
+          UBCF = list(name = "POPULAR", param = NULL),
+          SVD = list(name = "SVD", param = NULL)
+        )
+      )
+  
+  ))
+e_hybride = evaluate(e_cv,algorithms,
+                        type = "topNList",
+                        n=c(seq(10, 100, by = 5)))
+
+```
+
+## ROC / AUC
+
+```{r}
+plot(e_hybride)
+```
+
+-   On peut utiliser en alternance popular ensuite SVD.
+
+## Rappel/precision
+
+```{r}
+plot(e_hybride,"prec/rec")
+```
+
+## Implémenter un algorithme
+
+-   <https://github.com/cran/recommenderlab/blob/master/R/RECOM_POPULAR.R>
+-   Définir une "creator function" qui prend en entré les données
+-   Cette fonction réalise le processus d'entrainement
+-   Enfin elle implémente une fonction prédict
+
+```{r,echo=FALSE}
+.REAL_POPULAR_params <- list(
+    normalize="center",
+    aggregationRatings=colMeans,
+    aggregationPopularity=colSums
+)
+
+## always recommends the top-N popular items (without known items)
+REAL_POPULAR <- function(data, parameter = NULL) {
+  p <- getParameters(.REAL_POPULAR_params, parameter)
+  data <- normalize(data, method=p$normalize)
+  ratings <- new("realRatingMatrix",
+    data = dropNA(t(p$aggregationRatings(data))),
+    normalize = data@normalize)
+  topN <- new("topNList",
+    items = list(order(p$aggregationPopularity(data), decreasing=TRUE)),
+    itemLabels = colnames(data),
+    n= ncol(data))
+  model <- c(list(
+    topN = topN,
+    ratings = ratings
+  ), p)
+  predict <- function(model, newdata, n=10,
+    data=NULL, type=c("topNList", "ratings", "ratingMatrix"), ...) {
+    type <- match.arg(type)
+    if(is.numeric(newdata)) {
+      if(is.null(data) || !is(data, "ratingMatrix"))
+        stop("If newdata is a user id then data needes to be the training dataset.")
+      newdata <- data[newdata,]
+    }
+    if(ncol(newdata) != ncol(model$ratings)) stop("number of items in newdata does not match model.")
+    ### create denormalized data for each new user
+    newdata <- normalize(newdata, method = model$normalize)
+    ratings <- model$ratings[rep(1L, nrow(newdata)),]
+    ratings@normalize <- getNormalize(newdata)
+    ratings <- denormalize(ratings, getNormalize(newdata))
+    rownames(ratings) <- rownames(newdata)
+    ### this is because we use populary and not average rating here!
+    if(type=="topNList") {
+      topN <- model$topN
+      topN@items <- structure(
+        replicate(nrow(newdata), topN@items, simplify = TRUE),
+        names = rownames(newdata))
+      topN@ratings <- structure(lapply(1:length(topN@items),
+        function(i) as(as(ratings[i, topN@items[[i]]], "matrix"), "vector")),
+        names = rownames(newdata))
+      topN <- removeKnownItems(topN, newdata)
+      topN <- bestN(topN, n)
+      return(topN)
+    }
+    returnRatings(ratings, newdata, type, n)
+  }
+  ## construct recommender object
+  new("Recommender", method = "CUSTOM_POPULAR", dataType = class(data),
+    ntrain = nrow(data), model = model, predict = predict)
+}
+## register recommender
+recommenderRegistry$set_entry(
+  method="CUSTOM_POPULAR", dataType = "realRatingMatrix", fun=REAL_POPULAR,
+  description="Recommender based on item popularity.",
+  parameters=.REAL_POPULAR_params)
 ```
