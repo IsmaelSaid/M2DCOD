@@ -309,21 +309,32 @@ head(notation_itemList)
 ```
 
 ## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 4: Choix du seuil minimum du support (heuristiques)
-
-#Pour la suite des parties: ces données sont utilisables
-
-#charger les transactions en CSV
-```{r éxporter dataset en CSV}
-write.csv(notation_film,"ItemList.csv", quote = FALSE, row.names = TRUE)
+Examinons d'abord les données de transaction :
+```{r examen des donnée de transaction}
+#fonction qui délivre la fréquences des item dans la base de données des transactions
+summary(transaction)
 ```
 
-#Lecture de la transacion à partir du csv
-```{r transaction}
-transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1)
+Le résumé indique que les éléments les plus fréquents apparaît 2 fois dans l'ensemble de données. Les films ont en général un support très faible (les données de notation chargées est restreinte car problème de chargement).
+
+Examinons le quantile de la fréquence des items
+```{r quantile de la fréquence des items}
+#fonction qui affiche les quantiles de la transaction
+summary(itemFrequency(transaction))
 ```
 
-#Test de sortie algo APRIORI via la transaction pour sortir les règles: OK
-```{r regles}
-regles <- apriori(transaction,parameter = list(sup = 0.017, conf = 0,target="rules"));
-inspect(regles)
+L'élément unique le plus fréquent possède le support de 0.03571. Si l'on prend un support de 0,33 sur la transaction,l'algorithme apriori en sortira aucunes voir très peu de règles. On doit reduire le support.
+Si l'on souhaite rechercher des ensembles d'éléments/règles qui apparaissent au moins 10 fois dans la base de données des transaction, on définit le support minimale sur: 10 / taille_de_la_base_de_transaction.
+
+L'heuristique du choix du minimum de support, sur le package arules est alors: n / length(base_de_donne_des_transactions). 
+Avec n: nombre d'éléments/règles que l'on souhaite au moins apprarître n fois dans la bases de donnée transactionnelles.
+Et length(): la fonction R qui retourne le nombre d'éléments dans la base de données des transactions.
+
+Pour le dataset des films et des ses notations: le support minimun est 0,017 Car:
+```{r heuristique support minimum}
+# Implémentaion du calcul de l'heuristique du choix de support minimum
+
+#n est le nombre d'éléments/règles que l'on souhaite au moins apprarître n fois dans la bases de donnée transactionnelles.
+n = 1
+n / length(transaction)
 ```
