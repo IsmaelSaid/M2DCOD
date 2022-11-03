@@ -1,0 +1,312 @@
+---
+title: 'Guide d'utilisation : Librairie arules'
+author: 'Membre du groupe :  RAKOTONIRINA Harimanga Valimbavaka Yannick 42006741 et RAMAMONJISOA Miary '
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Introduction
+
+Ce document contient le guide d'utilisation de la librairie "arules" du langage R.
+
+"arules" fournit l'infrastructure pour représenter, manipuler et analyser les données et les modèles de transaction à l'aide d'ensembles d'éléments et de règles d'association. 
+La librairie fournit également un large éventail de qualité de mesures  et d’algorithmes de mining par exemple Apriori ou Eclat.
+
+Dans cette guide d'utilisation, nous allons détailler l'utilisation de la librairie avec le dataset "movies" et "rating".
+Le dataset "movies_metadata" contient les identifiants et les titres des films. Le dataset "rating_small" contient les notes de chaque utilisateurs pour les films qu’ils ont visionnés ( sur une échelle de 1 à 5).
+
+Lien de téléchagrement des datasets ( plateforme KAGGLE): voir 
+<https://storage.googleapis.com/kaggle-data-sets/3405/6663/bundle/archive.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20221028%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20221028T142058Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=4b40430abe1202127eb465127e0ade04896bab6dd9255fb4d9bc04c3c0182769b52b678f04142b14d35e23cfbfc84f13e3c84c722bd426132ba5f098ca2c0777b90852a76dfc33408786ee0b5859f73b14d53020bcf43085b45432163e98272e9970b638549c04a59dc0424049bcb64d8183ad6a77cfbba2afc1d90b22232648f4f3a984ef580f1fb765f91f430438cb53b803b495e3671dc380a3abd315814b6d0ad4fd9873312e7ad8b42d957edb9cd5b5dc2f1442df46d32148432d49e69aed14ea52bfe8a2a515980efc7d799e28df952b12b6b78020a17c3b39af17ddceb48135839eb244a9e0bc81d00798d479b34348f49ae1c9e662e72cd1ed479508>
+
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 1: Examen des variables
+
+Installation des librairies utilisées
+```{r arules et dataset}
+#librairie de gestion des chaines de caractères
+library("stringr")
+#librairie pour fractionner, appliquer et combiner des données
+library("plyr")
+#librairie arules
+library("arules")
+#librairie pour visualiser des règles d'association et des ensembles d'éléments fréquents
+library("arulesViz")
+#librairie pour créer des graphiques Web interactifs avec javascript sous R
+library("plotly")
+```
+
+Charger les 2 datasets
+```{r chagrer dataset film}
+#librairie qui permet de lire des données rectangulaires (comme 'csv','tsv')
+library(readr)
+#lecture du fichier csv et chargement dans le vecteur film
+film <- read_csv("movies_metadata.csv")
+
+#afficher les 20 premiers lignes de données
+film[1:20,]
+```
+
+```{r charger dataset notation film}
+library(readr)
+#lecture du fichier csv et chargement dans le vecteur notatin_film
+notation_film <- read_csv("ratings_small.csv")
+
+#afficher les 20 premiers lignes de données
+notation_film[1:20,]
+
+colnames(notation_film)<-c("userId", "filmId", "note","timestamp")
+```
+
+Description statistique du dataset "film"
+```{r description statistique sur film}
+#fonction qui délivre la moyenne et les quantiles de chaque variable
+summary(film)
+```
+
+Statistique descripive sur le dataset "notation"
+```{r description statistique sur notation}
+#fonction qui délivre la moyenne et les quantiles de chaque variable
+summary(notation_film)
+```
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 2: Sélection de variables plus pertinentes
+MOTIF DE SELECTION
+
+Pour le dataset "film": On choisi le variable "id" et "titre" pour constituer la base de données des transactions.Puisque les données de ces colonnes sont complets (il n'y a pas de donnée qui manque)
+  - "id": car c'est un identifiant unique qui permet trouver un film dans le dataset.
+  - "titre": car le titre est une condition nécessaire et suffisante pour le concept film.
+  
+Pour le dataset "notation": On choisi tous les variables sauf "timestamp". On peut omettre cette variable car on peut englober le timestamp par une classe délimiant la période de toutes les notations.
+
+On utilise la fonction str_replace_all pour remplacer les virgules par des espaces dans les titres pour éviter les problèmes de transformation.
+
+```{r selection des variables pertinentes}
+#On séléctionne seulement les variables "id" et "titre" du vecteur "film"
+film <- subset(film, select=c("id" ,"title"))
+
+#on supprime les virgules dans les titres
+film $title<- str_replace_all(film$title, ",", " ")
+
+#On séléctionne seulement les variables "Userid", "filmId" et "note" du vecteur "notation_film"
+notation_film <- subset(notation_film, select=c("userId" ,"filmId", "note"))
+
+#changement de format
+notation_film$filmId<-as.character(notation_film$filmId)
+notation_film$userId<-as.character(notation_film$userId)
+```
+
+```{r suppression des fils peu visioné et mal notés}
+#On fait le compte du nombre de visionnage par film via le nombre de ligne de "filmId"
+freq_film <-count(notation_film,c("filmId"))
+#changer le nom de la variable "filmId" en "nombre de vue"
+names(freq_film)<-c("filmId","Number_view")
+#afficher l'histogramme des nombres de vues
+plot_ly (x=freq_film$Number_view, type = "histogram")%>%
+layout(title = 'Nombre de vues par film',
+xaxis = list(title = 'Nombre de vues'),
+yaxis = list(title = 'Nombre de films'))
+
+#Répartition des notes moyennes dans le vecteur "notation_film" par une calcule des moyennes des notes
+freq_notation_film <-as.data.frame(tapply(notation_film$note,notation_film$filmId,mean))
+#ajouter le nom de variable "Notes_moyennes"
+names(freq_notation_film)<-c("Notes_moyennes")
+freq_notation_film$filmId<-rownames(freq_notation_film)
+#afficher l'histogramme des notes moyennes selon le nombre de film
+plot_ly (x=freq_notation_film$Notes_moyennes, type = "histogram")%>%
+layout(title = 'Notes moyennes par films',
+xaxis = list(title = 'Notes moyennes'),
+yaxis = list(title = 'Nombre de films'))
+```
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 3: Discrétisation de variables quantitatives (heuristique)
+
+Discrétiser c'est réaliser un découpage en classes des variables quantitative et ensuite nommer les classes.
+
+Dans le dataset "rating" (notation des films),la variable "note" est quantitative et on veut le catégoriser en classe les notes.
+Et dans le dataset "movies" (les films), la variale "nombre de vue" est aussi quantitaive et on veut catégorisé en classe de nombre de vue.
+
+Interêt de la discrétisation: Pour séléctionner les données à charger dans la base transactionnels. On séléctionne uniquement les classes qui sont utiles pour la prise de décisions.
+
+Pour les 2 datasets (film et noation): les films peu visionnés et les films mal notés ne seront pas ajoutés dans la base de données transactionnelles. On réalise alors une discrétisation des variables "note" et "nombre de vues".
+
+a) DETERMINER LE NOMBRE DE CLASSE
+
+L'une des méthodes heuristique pour déterminer le nombre optimale de classe, utilise la formule de HUNTSBERGER:
+1+3.3*log(N1,base=10) avec N:somme des efféctifs de la variable à discrétiser
+```{r nombre de classe "note"}
+#Pour la variable "note" (dataset "rating")
+
+#calculer la somme des efféctifs de la variable à discrétiser
+N1=length(notation_film$note)
+#Implémentation de la formule de HUNTSBERGER
+1+3.3*log(N1,base=10)
+```
+
+```{r nombre de classe "nombre de vues"}
+#Pour la variable "nombre de vues" (dataset "movies")
+
+#calculer la somme des efféctifs de la variable à discrétiser
+N2=length(freq_film$Number_view)
+#Implémentation de la formule de HUNTSBERGER
+1+3.3*log(N2,base=10)
+```
+b) CHOISIR LES BORNES DE LA CLASSE
+
+La méthode utilisée est la METHODE DES CLASSES D'AMPLITUDE EGALES.
+
+```{r borne de classe "note"}
+#Amplitude: a=(max-min)/k, avec k=17,5 (on arrondit 17,5 à 18) tel K est le nombre de classe
+
+#Implémentation du calcul de l'amplitude
+a1 = (max(notation_film$note)-min(notation_film$note)) / 18
+
+#Création d'un tableau résumant les bornes de la classe note
+classe_note <- data.frame(
+    Bornes=c(
+        "Borne 0 = min",
+        "Borne 1 = min + a1",
+        "Borne 2 = min + 2a1",
+        "Borne 3 = min + 3a1",
+        "Borne 4 = min + 4a1",
+        "Borne 5 = min + 5a1",
+        "Borne 6 = min + 6a1",
+        "Borne 15 = min + 14a1",
+        "Borne 16 = min + 15a1",
+        "Borne 17 = min + 16a1",
+        "Borne 18 = max"
+        ),Valeur=c(
+        min(notation_film$note),
+        min(notation_film$note) + a1,
+        min(notation_film$note) + 2*a1,
+        min(notation_film$note) + 3*a1,
+        min(notation_film$note) + 4*a1,
+        min(notation_film$note) + 5*a1,
+        min(notation_film$note) + 6*a1,
+        min(notation_film$note) + 14*a1,
+        min(notation_film$note) + 15*a1,
+        min(notation_film$note) + 16*a1,
+        max(notation_film$note)
+        )
+)
+
+# afficher le tableau résumant les bornes de la classe note
+classe_note
+```
+
+```{r borne de classe "nombre de vues"}
+#Amplitude: a=(max-min)/k, avec k=14 (On arrondit 14.05 à 14)
+
+#Implémentation du calcul de l'amplitude
+a2 = (max(freq_film$Number_view)-min(freq_film$Number_view)) / 14
+
+#Création d'un tableau résumant les bornes de la classe nombre de vues
+classe_nombre_de_vue <- classe_nombre_de_vue <- data.frame(
+    Bornes=c(
+    "Borne 0 = min",
+    "Borne 1 = min + a2",
+    "Borne 2 = min + 2a2","
+    Borne 3 = min + 3a2",
+    "Borne 4 = min + 4a2",
+    "Borne 5 = min + 5a2",
+    "Borne 6 = min + 6a2",
+    "Borne 7 = min + 7a2",
+    "Borne 8 = min + 8a2",
+    "Borne 9 = min + 9a2",
+    "Borne 10 = min + 10a2",
+    "Borne 11 = min + 11a2",
+    "Borne 12 = min + 12a2",
+    "Borne 13 = min + 13a2",
+    "Borne 14 = max"), 
+    
+    Valeur=c(
+        min(freq_film$Number_view),
+        min(freq_film$Number_view)+ a2,
+        min(freq_film$Number_view)+ 2*a2,
+        min(freq_film$Number_view)+ 3*a2,
+        min(freq_film$Number_view)+ 4*a2,
+        min(freq_film$Number_view)+ 5*a2,
+        min(freq_film$Number_view)+ 6*a2,
+        min(freq_film$Number_view)+ 7*a2,
+        min(freq_film$Number_view)+ 8*a2,
+        min(freq_film$Number_view)+ 9*a2,
+        min(freq_film$Number_view)+ 10*a2,
+        min(freq_film$Number_view)+ 11*a2,
+        min(freq_film$Number_view)+ 12*a2,
+        min(freq_film$Number_view)+ 13*a2,
+        max(freq_film$Number_view)
+    )
+)
+
+#tableau résumant les bornes de la classe nombre de vues
+classe_nombre_de_vue
+```
+
+Dans ces 2 discréction de variables, on en déduit que:
+
+a) la notation des films les plus appréciées appartienne à la classe des valeurs  [4;5]. On peut en déduire que les film les mieux notée ont la note supérieur ou égale à 4.On utilisera cette condition pour remplir la base de donnée des transactions.
+
+b) La classe des valeurs  des films les plus visionnées sont les films ayant des nombre de vues entre [200;341]. On utilisera la condition nombre de vue supérieur à 200 pour remplir la base de données des transactions.
+
+
+```{r filter les variables pour former les paniers de transactions}
+#On en conserve que les films avec des notes supérieures ou égales à 4
+notation_film <- notation_film[notation_film$note>=4,]
+
+# Joindre dans une même vecteur tous (car paramètre all.x) la note d'un film et la fréquence de noation d'un film
+notation_film<-merge(x = notation_film, y = freq_notation_film, by = "filmId", all.x = TRUE)
+# On filtre les films moins de 200 vues (moins visionés)
+notation_film<-notation_film[freq_film$Number_view>200,]
+
+
+#Nettoyage et pré-traitement de données: Dans le même tableau, on ajoute le nom des films et on ne conserve que les films qui ont un nom
+names(film)=c("filmId", "titre")
+#Joindre aussi dans le vecteur "notation_film" l'id des films
+notation_film<-merge(x = notation_film, y = film, by = "filmId")
+ #afficher les premiers élémént du vecteur notation_film
+head(notation_film)
+```
+
+Transformer les données en données « basket » ou « panier » ( i.e au format transactions): Pour pouvoir utiliser la fonction arules qui permet d'obtenir les règles d’association.
+
+```{r transformer les données en transactions}
+#On transforme les données en "panier" dans un fichier csv
+notation_itemList <- ddply(notation_film,c("userId"),
+function(df1)paste(df1$titre,collapse = ","))
+notation_itemList<-notation_itemList$V1
+
+#Ecrire les transactions dans le fichier "ItemList.csv".Fichier exporter dans le dossier courant.
+write.csv(notation_itemList,"ItemList.csv", quote = FALSE, row.names = TRUE)
+
+#Lecture de la transacion à partir du csv
+transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1);
+```
+
+Résultats: pour chaque utilisateur, la liste de tous les films qu’il a visionnés et pour lesquels il a attribué une note supérieure ou égale à 4 sont affiché :
+```{r afficher les transactions}
+#afficher les premiers élémént du vecteur contenant le panier
+head(notation_itemList)
+```
+
+## RAKOTONIRINA Harimanga Valimbavaka Yannick - Sénarios 4: Choix du seuil minimum du support (heuristiques)
+
+#Pour la suite des parties: ces données sont utilisables
+
+#charger les transactions en CSV
+```{r éxporter dataset en CSV}
+write.csv(notation_film,"ItemList.csv", quote = FALSE, row.names = TRUE)
+```
+
+#Lecture de la transacion à partir du csv
+```{r transaction}
+transaction = read.transactions(file="ItemList.csv", rm.duplicates= TRUE, format="basket",sep=",",cols=1)
+```
+
+#Test de sortie algo APRIORI via la transaction pour sortir les règles: OK
+```{r regles}
+regles <- apriori(transaction,parameter = list(sup = 0.017, conf = 0,target="rules"));
+inspect(regles)
+```
