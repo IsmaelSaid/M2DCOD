@@ -1,6 +1,6 @@
 ---
 title: "Guide d'utilisation recommenderlab"
-author: "Etienne Baillif & Ismael Said"
+author: "Etienne Baillif:4002761 & Ismael Said:36001905"
 date: "`r Sys.Date()`"
 output:
   slidy_presentation: default
